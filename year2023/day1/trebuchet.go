@@ -28,7 +28,6 @@ func DecodeFile(file *os.File) (total int) {
 	return
 }
 
-
 func DecodeLine(line string) int {
 	tokenMap := map[string]int{
 		"1":     1,
@@ -53,16 +52,13 @@ func DecodeLine(line string) int {
 	var first, second int
 	lowest, highest := len(line), -1
 	for k, v := range tokenMap {
-		if i := strings.Index(line, k); i >= 0 {
-			if i < lowest {
-				first = v
-				lowest = i
-			}
-			if i > highest {
-				second = v
-				highest = i
-			}
+		if i := strings.Index(line, k); i >= 0 && i < lowest {
+			first, lowest = v, i
+		}
+		if i := strings.LastIndex(line, k); i >= 0 && i > highest {
+			second, highest = v, i
 		}
 	}
+
 	return first*10 + second
 }

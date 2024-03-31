@@ -24,6 +24,7 @@ func TestDecodeLine(t *testing.T) {
 		{"4nineeightseven2", 42},
 		{"zoneight234", 14},
 		{"7pqrstsixteen", 76},
+		{"1dveight19l1", 11},
 	}
 	for _, c := range cases {
 		got := DecodeLine(c.in)
@@ -33,13 +34,12 @@ func TestDecodeLine(t *testing.T) {
 	}
 }
 
-
 func TestDecodeFile(t *testing.T) {
 	cases := []struct {
 		in   string
 		want int
 	}{
-		{ "input.test.txt", 281 },
+		{"input.test.txt", 281},
 	}
 	for _, c := range cases {
 		file, err := os.Open(c.in)
