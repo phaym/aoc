@@ -1,3 +1,3 @@
-module phaym/aoc
+module aoc
 
 go 1.20
