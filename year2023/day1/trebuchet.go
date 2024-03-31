@@ -1,13 +1,29 @@
 package day1
 
 import (
+	"bufio"
 	"fmt"
+	"os"
 	"strconv"
 )
-
+const FILE_PATH = "year2023/day1/input.txt"
 
 func Run() { 
-	fmt.Println("day1")
+	file, err := os.Open(FILE_PATH)
+	if err != nil { 
+		panic(err)
+	}
+	defer file.Close()
+
+	scanner := bufio.NewScanner(file);
+	scanner.Split(bufio.ScanLines)
+	total := 0
+	lines := 0
+	for scanner.Scan() { 
+		total += DecodeLine(scanner.Text())
+		lines++
+	}
+	fmt.Println(total, lines)
 }
 
 func DecodeLine(line string) int {
