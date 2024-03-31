@@ -5,7 +5,7 @@ import (
 	"fmt"
 )
 
-func main() { 
+func main() {
 	fmt.Println("start aoc")
 	day1.Run()
 }
