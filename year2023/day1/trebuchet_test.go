@@ -10,7 +10,10 @@ func TestDecodeLine(t *testing.T){
         {"1abc2", 12},
         {"pqr3stu8vwx", 38},
         {"a1b2c3d4e5f", 15},
-        {"treb7uchet", 7},
+        {"treb7uchet", 77},
+        {"gtmszpsjmggr3", 33},
+        {"7dvt", 77},
+        {"five1ninetjjtfxqpdkgrxtgxrcsevenkfdzlh", 11},
     }
     for _, c := range cases {
         got := DecodeLine(c.in)
