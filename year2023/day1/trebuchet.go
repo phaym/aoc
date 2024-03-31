@@ -4,7 +4,7 @@ import (
 	"bufio"
 	"fmt"
 	"os"
-	"strconv"
+	"strings"
 )
 
 const FILE_PATH = "year2023/day1/input.txt"
@@ -25,23 +25,41 @@ func Run() {
 	fmt.Println(total)
 }
 
+var tokenMap = map[string]int{
+	"1":     1,
+	"2":     2,
+	"3":     3,
+	"4":     4,
+	"5":     5,
+	"6":     6,
+	"7":     7,
+	"8":     8,
+	"9":     9,
+	"one":   1,
+	"two":   2,
+	"three": 3,
+	"four":  4,
+	"five":  5,
+	"six":   6,
+	"seven": 7,
+	"eight": 8,
+	"nine":  9,
+}
+
 func DecodeLine(line string) int {
-	var r1, r2 string
-	for start, end := 0, len(line)-1; r1 == "" || r2 == ""; start, end = start+1, end-1 {
-		if r1 == "" {
-			if _, err := strconv.Atoi(string(line[start])); err == nil {
-				r1 = string(line[start])
+	var first, second int
+	lowest, highest := len(line), -1
+	for k, v := range tokenMap {
+		if i := strings.Index(line, k); i >= 0 {
+			if i < lowest {
+				first = v
+				lowest = i
 			}
-		}
-		if r2 == "" {
-			if _, err := strconv.Atoi(string(line[end])); err == nil {
-				r2 = string(line[end])
+			if i > highest {
+				second = v
+				highest = i
 			}
 		}
 	}
-	result, err := strconv.Atoi(r1 + r2)
-	if err != nil {
-		panic(fmt.Sprintf("%v is not a number", result))
-	}
-	return result
+	return first*10 + second
 }
