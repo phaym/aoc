@@ -1,7 +1,6 @@
 package day3
 
 import (
-	"os"
 	"testing"
 )
 
@@ -31,12 +30,7 @@ func TestDecodeFile(t *testing.T) {
 		{"input.test.txt", 4361},
 	}
 	for _, c := range cases {
-		file, err := os.Open(c.in)
-		if err != nil {
-			panic(err)
-		}
-		defer file.Close()
-		got := ParseFile(file)
+		got := A(c.in)
 		if got != c.want {
 			t.Errorf("DecodeFile(%q) == %v, want %v", c.in, got, c.want)
 		}
