@@ -29,7 +29,7 @@ func ParseFile(file *os.File) (total int) {
 		if error != nil {
 			panic(error)
 		}
-		id, possible := CheckGame(game)
+		id, possible := CheckGame(&game)
 		if possible {
 			total += id
 		}
@@ -42,12 +42,25 @@ type Game struct {
 	ColorCounts map[string][]int
 }
 
-func CheckGame(game Game) (int, bool) {
-	//maxRed, maxGreen, maxBlue := 12, 13, 14
-	return game.Id, false
+func CheckGame(game *Game) (int, bool) {
+	maxCounts := map[string]int{
+		"blue":  14,
+		"green": 13,
+		"red":   12,
+	}
+	for color, max := range maxCounts {
+		for _, count := range game.ColorCounts[color] {
+			if count > max {
+				return game.Id, false
+			}
+		}
+	}
+
+	return game.Id, true
 }
 
 func ParseLine(line string) (game Game, err error) {
+
 	gameParts := strings.Split(line, ":")
 	after, _ := strings.CutPrefix(gameParts[0], "Game ")
 	id, error := strconv.Atoi(after)
@@ -59,7 +72,6 @@ func ParseLine(line string) (game Game, err error) {
 	game.ColorCounts = make(map[string][]int)
 	regex := regexp.MustCompile(`(?:(\d+)\s([a-z]*))`)
 	for _, match := range regex.FindAllStringSubmatch(gameParts[1], -1) {
-		fmt.Println(match[0])
 		color := match[2]
 		if count, error := strconv.Atoi(match[1]); error == nil {
 			game.ColorCounts[color] = append(game.ColorCounts[color], count)
