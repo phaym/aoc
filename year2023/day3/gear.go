@@ -30,12 +30,14 @@ func B(path string) (total int) {
 
 func A(path string) (total int) {
 	schematic := FileToSchematic(path)
-	parts := schematic.FindParts()
-	for _, part := range parts {
-		if partNumber, error := schematic.ValidatePart(part); error == nil {
+	symbols := schematic.FindSymbols()
+	for _, symbol := range symbols {
+		partNumbers := schematic.GetAdjacentParts(symbol)
+		for _, partNumber := range partNumbers {
 			total += partNumber
 		}
 	}
+
 	return total
 }
 
