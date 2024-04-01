@@ -8,8 +8,24 @@ import (
 )
 
 func Run() {
-	result := A("year2023/day3/input.txt")
+	result := B("year2023/day3/input.txt")
 	fmt.Println(result)
+}
+
+func B(path string) (total int) {
+	schematic := FileToSchematic(path)
+	symbols := schematic.FindSymbols()
+	for _, symbol := range symbols {
+		if symbol.symbol != "*" {
+			continue
+		}
+		partNumbers := schematic.GetAdjacentParts(symbol)
+		if len(partNumbers) == 2 {
+			gearRatio := partNumbers[0] * partNumbers[1]
+			total += gearRatio
+		}
+	}
+	return
 }
 
 func A(path string) (total int) {
