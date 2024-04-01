@@ -14,11 +14,16 @@ func Run() {
 
 func A(path string) (total int) {
 	schematic := FileToSchematic(path)
-	fmt.Printf("%#v", schematic)
-	return
+	parts := schematic.FindParts()
+	for _, part := range parts {
+		if partNumber, error := schematic.ValidatePart(part); error == nil {
+			total += partNumber
+		}
+	}
+	return total
 }
 
-func FileToSchematic(path string) [][]string {
+func FileToSchematic(path string) Schematic {
 	file, err := os.Open(path)
 	if err != nil {
 		panic(err)
@@ -26,14 +31,6 @@ func FileToSchematic(path string) [][]string {
 	defer file.Close()
 	lines := ReadLines(file)
 	return ParseLines(lines)
-}
-
-func ParseLines(lines <-chan string) [][]string {
-	schematic := make([][]string, 0)
-	for line := range lines {
-		schematic = append(schematic, strings.Split(line, ""))
-	}
-	return schematic
 }
 
 func ReadLines(file *os.File) <-chan string {
@@ -47,4 +44,12 @@ func ReadLines(file *os.File) <-chan string {
 		close(c)
 	}()
 	return c
+}
+
+func ParseLines(lines <-chan string) Schematic {
+	schematic := make([][]string, 0)
+	for line := range lines {
+		schematic = append(schematic, strings.Split(line, ""))
+	}
+	return schematic
 }

@@ -22,7 +22,7 @@ import (
 // 	}
 // }
 
-func TestDecodeFile(t *testing.T) {
+func TestA(t *testing.T) {
 	cases := []struct {
 		in   string
 		want int
