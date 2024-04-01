@@ -34,7 +34,7 @@ func TestDecodeFile(t *testing.T) {
 		in   string
 		want int
 	}{
-		{"input.test.txt", 8},
+		{"input.test.txt", 2286},
 	}
 	for _, c := range cases {
 		file, err := os.Open(c.in)

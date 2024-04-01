@@ -29,12 +29,40 @@ func ParseFile(file *os.File) (total int) {
 		if error != nil {
 			panic(error)
 		}
-		id, possible := CheckGame(&game)
-		if possible {
-			total += id
-		}
+		total += B(&game)
 	}
 	return
+}
+
+func A(game *Game) (total int) {
+	id, possible := CheckGame(game)
+	if possible {
+		total = id
+	}
+	return
+}
+
+func B(game *Game) (powerOfMin int) {
+	maxCounts := map[string]int{
+		"blue":  0,
+		"green": 0,
+		"red":   0,
+	}
+	for color := range maxCounts {
+		for _, count := range game.ColorCounts[color] {
+			if count > maxCounts[color] {
+				maxCounts[color] = count
+			}
+		}
+	}
+	for _, max := range maxCounts {
+		if powerOfMin == 0 {
+			powerOfMin = max
+		} else {
+			powerOfMin *= max
+		}
+	}
+	return powerOfMin
 }
 
 type Game struct {
