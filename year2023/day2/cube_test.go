@@ -16,6 +16,10 @@ func TestParseLine(t *testing.T) {
 			"Game 1: 3 blue, 4 red; 1 red, 2 green, 6 blue; 2 green",
 			Game{Id: 1, ColorCounts: map[string][]int{"blue": {3, 6}, "red": {4, 1}, "green": {2, 2}}},
 		},
+		{
+			"Game 100: 16 blue, 12 red, 3 green; 2 green, 7 blue; 5 blue, 4 green; 10 blue, 6 red, 6 green; 5 red, 12 blue, 2 green; 9 red, 12 blue, 11 green",
+			Game{Id: 100, ColorCounts: map[string][]int{"blue": {16, 7, 5, 10, 12, 12}, "red": {12, 6, 5, 9}, "green": {3, 2, 4, 6, 2, 11}}},
+		},
 	}
 	for _, c := range cases {
 		got, _ := ParseLine(c.in)

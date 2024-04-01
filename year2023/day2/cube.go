@@ -57,7 +57,7 @@ func ParseLine(line string) (game Game, err error) {
 	game.Id = id
 	// Map to store the counts of each color
 	game.ColorCounts = make(map[string][]int)
-	regex := regexp.MustCompile(`(?:(\d)\s([a-z]*))`)
+	regex := regexp.MustCompile(`(?:(\d+)\s([a-z]*))`)
 	for _, match := range regex.FindAllStringSubmatch(gameParts[1], -1) {
 		fmt.Println(match[0])
 		color := match[2]
