@@ -11,10 +11,21 @@ func Run() {
 	fmt.Println(result)
 }
 
+func pipe[T any, K any](in <-chan T, f func(T) K) <-chan K {
+	out := make(chan K)
+	go func() {
+		for n := range in {
+			out <- f(n)
+		}
+		close(out)
+	}()
+	return out
+}
+
 func A(path string) (total int) {
 	lines := util.ReadLinesFromFile(path)
-	cards := ParseCardCh(lines)
-	points := CalcPointsCh(cards)
+	cards := pipe(lines, ParseCard)
+	points := pipe(cards, CalcPoints)
 	for point := range points {
 		total += point
 	}
@@ -30,17 +41,6 @@ func NewCard() *Card {
 	return &Card{winners: make(map[string]int), played: make(map[string]int)}
 }
 
-func CalcPointsCh(in <-chan *Card) <-chan int {
-	out := make(chan int)
-	go func() {
-		for n := range in {
-			out <- CalcPoints(n)
-		}
-		close(out)
-	}()
-	return out
-}
-
 func CalcPoints(card *Card) (points int) {
 	for k := range card.played {
 		if _, ok := card.winners[k]; ok {
@@ -52,17 +52,6 @@ func CalcPoints(card *Card) (points int) {
 		}
 	}
 	return
-}
-
-func ParseCardCh(in <-chan string) <-chan *Card {
-	out := make(chan *Card)
-	go func() {
-		for n := range in {
-			out <- ParseCard(n)
-		}
-		close(out)
-	}()
-	return out
 }
 
 func ParseCard(line string) *Card {
