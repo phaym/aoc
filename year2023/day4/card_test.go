@@ -9,7 +9,7 @@ func TestA(t *testing.T) {
 		in   string
 		want int
 	}{
-		{"input.test.txt", 0},
+		{"input.test.txt", 13},
 	}
 	for _, c := range cases {
 		got := A(c.in)
@@ -25,9 +25,10 @@ func TestCalcPoints(t *testing.T) {
 		want int
 	}{
 		{"Card 1: 41 48 83 86 17 | 83 86  6 31 17  9 48 53", 8},
+		{"Card 2: 13 32 20 16 61 | 61 30 68 82 17 32 24 19", 2},
 	}
 	for _, c := range cases {
-		got := CalcPoints(c.in)
+		got := CalcPoints(ParseCard(c.in))
 		if got != c.want {
 			t.Errorf("CalcPoints(%q) == %v, want %v", c.in, got, c.want)
 		}

@@ -13,20 +13,15 @@ func Run() {
 
 func A(path string) (total int) {
 	lines := util.ReadLinesFromFile(path)
-	points := make(chan int)
-	for line := range lines {
-		card := CalcPoints(line)
-		points <- card
-	}
+	cards := ParseCardCh(lines)
+	points := CalcPointsCh(cards)
 	for point := range points {
 		total += point
-		fmt.Println(point)
 	}
 	return total
 }
 
 type Card struct {
-	id      int
 	winners map[string]int
 	played  map[string]int
 }
@@ -35,9 +30,19 @@ func NewCard() *Card {
 	return &Card{winners: make(map[string]int), played: make(map[string]int)}
 }
 
-func CalcPoints(line string) (points int) {
-	card := ParseCard(line)
-	for k, _ := range card.played {
+func CalcPointsCh(in <-chan *Card) <-chan int {
+	out := make(chan int)
+	go func() {
+		for n := range in {
+			out <- CalcPoints(n)
+		}
+		close(out)
+	}()
+	return out
+}
+
+func CalcPoints(card *Card) (points int) {
+	for k := range card.played {
 		if _, ok := card.winners[k]; ok {
 			if points == 0 {
 				points = 1
@@ -47,6 +52,17 @@ func CalcPoints(line string) (points int) {
 		}
 	}
 	return
+}
+
+func ParseCardCh(in <-chan string) <-chan *Card {
+	out := make(chan *Card)
+	go func() {
+		for n := range in {
+			out <- ParseCard(n)
+		}
+		close(out)
+	}()
+	return out
 }
 
 func ParseCard(line string) *Card {
