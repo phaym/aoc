@@ -22,7 +22,3 @@ func ReadLinesFromFile(filePath string) <-chan string {
 	}()
 	return lines
 }
-
-func Pipe() {
-
-}

@@ -61,8 +61,8 @@ func CalcCopies() func(card *Card) int {
 }
 
 func CalcPoints(card *Card) (points int) {
-	for k := range card.played {
-		if _, ok := card.winners[k]; ok {
+	for playedId := range card.played {
+		if _, ok := card.winners[playedId]; ok {
 			if points == 0 {
 				points = 1
 			} else {
