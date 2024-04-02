@@ -3,6 +3,8 @@ package day4
 import (
 	"aoc/util"
 	"fmt"
+	"regexp"
+	"strconv"
 	"strings"
 )
 
@@ -14,10 +16,10 @@ func Run() {
 func pipe[T any, K any](in <-chan T, f func(T) K) <-chan K {
 	out := make(chan K)
 	go func() {
+		defer close(out)
 		for n := range in {
 			out <- f(n)
 		}
-		close(out)
 	}()
 	return out
 }
@@ -58,11 +60,18 @@ func ParseCard(line string) *Card {
 	card := NewCard()
 	split := strings.Split(line, ":")
 	game := strings.Split(split[1], "|")
-	for _, winner := range strings.Split(strings.TrimSpace(game[0]), " ") {
-		card.winners[strings.TrimSpace(winner)] = 1
-	}
-	for _, played := range strings.Split(strings.TrimSpace(game[1]), " ") {
-		card.played[strings.TrimSpace(played)] = 1
-	}
+	card.winners = extractNumbers(game[0])
+	card.played = extractNumbers(game[1])
 	return card
+}
+
+func extractNumbers(input string) map[string]int {
+	numbers := make(map[string]int)
+	regex := regexp.MustCompile(`\b\d+\b`)
+	for _, match := range regex.FindAllString(input, -1) {
+		if _, err := strconv.Atoi(match); err == nil {
+			numbers[match] = 1
+		}
+	}
+	return numbers
 }
