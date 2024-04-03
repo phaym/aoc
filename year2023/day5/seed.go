@@ -10,7 +10,7 @@ import (
 )
 
 func Run() {
-	result := A("year2023/day4/input.txt")
+	result := A("year2023/day5/input.txt")
 	fmt.Println(result)
 }
 
@@ -18,7 +18,7 @@ func A(path string) int {
 	lines := file.ReadLinesFromFile(path)
 	seeds := Seeds(<-lines)
 	maps := Maps(lines)
-	output := seedToOutput(maps, seeds)
+	output := seedsToOutput(maps, seeds)
 
 	total := math.MaxInt32
 	for output := range output {
@@ -29,7 +29,7 @@ func A(path string) int {
 	return total
 }
 
-func seedToOutput(maps <-chan *Map, seeds []int) <-chan int {
+func seedsToOutput(maps <-chan *Map, seeds []int) <-chan int {
 	chain := make(chan int)
 	last := chain
 	for m := range maps {
