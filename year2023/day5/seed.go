@@ -6,7 +6,6 @@ import (
 	"math"
 	"regexp"
 	"strconv"
-	"strings"
 )
 
 func Run() {
@@ -16,8 +15,8 @@ func Run() {
 
 func A(path string) int {
 	lines := file.ReadLinesFromFile(path)
-	seeds := Seeds(<-lines)
-	maps := Maps(lines)
+	seeds := parseSeeds(<-lines)
+	maps := ParseMaps(lines)
 	output := seedsToOutput(maps, seeds)
 
 	total := math.MaxInt32
@@ -33,9 +32,7 @@ func seedsToOutput(maps <-chan *Map, seeds []int) <-chan int {
 	chain := make(chan int)
 	last := chain
 	for m := range maps {
-		out := make(chan int)
-		go chainMaps(last, m, out)
-		last = out
+		last = m.OutputChannel(last)
 	}
 	go func() {
 		defer close(chain)
@@ -46,25 +43,7 @@ func seedsToOutput(maps <-chan *Map, seeds []int) <-chan int {
 	return last
 }
 
-func chainMaps(in chan int, m *Map, out chan int) {
-	defer close(out)
-	for inValue := range in {
-		out <- MapNumber(inValue, m)
-	}
-}
-
-func MapNumber(in int, m *Map) int {
-	delta := 0
-	for _, r := range m.ranges {
-		if in >= r.sourceStart && in <= r.sourceStart+r.length {
-			delta = r.destStart - r.sourceStart
-			break
-		}
-	}
-	return in + delta
-}
-
-func Seeds(input string) []int {
+func parseSeeds(input string) []int {
 	numbers := make([]int, 0)
 	regex := regexp.MustCompile(`\b\d+\b`)
 	for _, match := range regex.FindAllString(input, -1) {
@@ -73,49 +52,4 @@ func Seeds(input string) []int {
 		}
 	}
 	return numbers
-}
-
-type Range struct {
-	destStart   int
-	sourceStart int
-	length      int
-}
-
-type Map struct {
-	label  string
-	ranges []Range
-}
-
-func NewRange(line string) Range {
-	regex := regexp.MustCompile(`\b\d+\b`)
-	match := regex.FindAllString(line, 3)
-	if len(match) != 3 {
-		panic("couldn't parse range: " + line)
-	}
-	sourceStart, _ := strconv.Atoi(match[0])
-	destStart, _ := strconv.Atoi(match[1])
-	length, _ := strconv.Atoi(match[2])
-	return Range{sourceStart, destStart, length}
-}
-
-func Maps(lines <-chan string) <-chan *Map {
-	out := make(chan *Map)
-	go func() {
-		m := &Map{}
-		for line := range lines {
-			if line == "" {
-				if len(m.ranges) > 0 {
-					out <- m
-				}
-				m = &Map{}
-			} else if strings.HasSuffix(line, ":") {
-				m.label = line
-			} else {
-				m.ranges = append(m.ranges, NewRange(line))
-			}
-		}
-		out <- m //EOF, last map is done
-		defer close(out)
-	}()
-	return out
 }

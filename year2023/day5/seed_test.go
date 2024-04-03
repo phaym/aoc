@@ -38,7 +38,7 @@ func TestMapNumber(t *testing.T) {
 		{1, 0},
 	}
 	for _, c := range cases {
-		got := MapNumber(c.in, m)
+		got := m.Output(c.in)
 		if got != c.want {
 			t.Errorf("MapNumber(%v) == %v, want %v", c.in, got, c.want)
 		}
