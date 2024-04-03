@@ -1,4 +1,4 @@
-package day4
+package day5
 
 import (
 	"aoc/util/file"
@@ -31,12 +31,14 @@ func A(path string) int {
 
 	go func(seeds []int, c chan int) {
 		defer close(c)
-		for seed := range seeds {
+		for _, seed := range seeds {
+			fmt.Printf("in: %v \n", seed)
 			c <- seed
 		}
 	}(seeds, chain)
 	total := math.MaxInt32
 	for output := range last {
+		fmt.Printf("out: %v \n", output)
 		if output < total {
 			total = output
 		}
