@@ -25,20 +25,15 @@ func A(path string) int {
 		go ChainMap(last, m, out)
 		last = out
 	}
-	// fmt.Println(seeds)
-	// fmt.Printf("out comes %v \n", total)
-	// fmt.Println("done")
 
-	go func(seeds []int, c chan int) {
-		defer close(c)
+	go func() {
+		defer close(chain)
 		for _, seed := range seeds {
-			fmt.Printf("in: %v \n", seed)
-			c <- seed
+			chain <- seed
 		}
-	}(seeds, chain)
+	}()
 	total := math.MaxInt32
 	for output := range last {
-		fmt.Printf("out: %v \n", output)
 		if output < total {
 			total = output
 		}
@@ -47,7 +42,10 @@ func A(path string) int {
 }
 
 func ChainMap(in chan int, m *Map, out chan int) {
-	out <- MapNumber(<-in, m)
+	defer close(out)
+	for inValue := range in {
+		out <- MapNumber(inValue, m)
+	}
 }
 
 func MapNumber(in int, m *Map) int {
