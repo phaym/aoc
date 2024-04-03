@@ -51,17 +51,6 @@ func NewRange(line string) Range {
 	return Range{sourceStart, destStart, length}
 }
 
-func (m *Map) Output(in int) int {
-	delta := 0
-	for _, r := range m.ranges {
-		if in >= r.sourceStart && in <= r.sourceStart+r.length {
-			delta = r.destStart - r.sourceStart
-			break
-		}
-	}
-	return in + delta
-}
-
 func (m *Map) ChainOutput(in chan int) chan int {
 	out := make(chan int)
 	go func() {
@@ -71,4 +60,15 @@ func (m *Map) ChainOutput(in chan int) chan int {
 		}
 	}()
 	return out
+}
+
+func (m *Map) Output(in int) int {
+	delta := 0
+	for _, r := range m.ranges {
+		if in >= r.sourceStart && in <= r.sourceStart+r.length {
+			delta = r.destStart - r.sourceStart
+			break
+		}
+	}
+	return in + delta
 }

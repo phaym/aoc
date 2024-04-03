@@ -39,6 +39,7 @@ func A(path string) int {
 	return total
 }
 
+// chain all maps and return the final one
 func chainMaps(in chan int, maps <-chan *Map) <-chan int {
 	out := in
 	for m := range maps {
