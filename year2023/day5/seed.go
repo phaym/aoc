@@ -17,30 +17,34 @@ func A(path string) int {
 	lines := file.ReadLinesFromFile(path)
 	seeds := parseSeeds(<-lines)
 	maps := ParseMaps(lines)
-	output := seedsToOutput(maps, seeds)
 
+	in := make(chan int)
+	out := chainMaps(in, maps)
+
+	// send seeds on the in channel
+	go func() {
+		defer close(in)
+		for _, seed := range seeds {
+			in <- seed
+		}
+	}()
+
+	// find minimum on out channel
 	total := math.MaxInt32
-	for output := range output {
-		if output < total {
-			total = output
+	for v := range out {
+		if v < total {
+			total = v
 		}
 	}
 	return total
 }
 
-func seedsToOutput(maps <-chan *Map, seeds []int) <-chan int {
-	chain := make(chan int)
-	last := chain
+func chainMaps(in chan int, maps <-chan *Map) <-chan int {
+	out := in
 	for m := range maps {
-		last = m.OutputChannel(last)
+		out = m.ChainOutput(out)
 	}
-	go func() {
-		defer close(chain)
-		for _, seed := range seeds {
-			chain <- seed
-		}
-	}()
-	return last
+	return out
 }
 
 func parseSeeds(input string) []int {

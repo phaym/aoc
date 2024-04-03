@@ -20,6 +20,7 @@ type Range struct {
 func ParseMaps(lines <-chan string) <-chan *Map {
 	out := make(chan *Map)
 	go func() {
+		defer close(out)
 		m := &Map{}
 		for line := range lines {
 			if line == "" {
@@ -34,7 +35,6 @@ func ParseMaps(lines <-chan string) <-chan *Map {
 			}
 		}
 		out <- m //EOF, last map is done
-		defer close(out)
 	}()
 	return out
 }
@@ -62,7 +62,7 @@ func (m *Map) Output(in int) int {
 	return in + delta
 }
 
-func (m *Map) OutputChannel(in chan int) chan int {
+func (m *Map) ChainOutput(in chan int) chan int {
 	out := make(chan int)
 	go func() {
 		defer close(out)
