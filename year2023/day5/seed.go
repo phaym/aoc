@@ -6,9 +6,18 @@ import (
 	"math"
 	"regexp"
 	"strconv"
+	"time"
 )
 
+func timer(name string) func() {
+	start := time.Now()
+	return func() {
+		fmt.Printf("%s took %v\n", name, time.Since(start))
+	}
+}
+
 func Run() {
+	defer timer("B")()
 	result := A("year2023/day5/input.txt")
 	fmt.Println(result)
 }
@@ -29,6 +38,36 @@ func A(path string) int {
 		}
 	}()
 
+	// find minimum on out channel
+	total := math.MaxInt32
+	for v := range out {
+		if v < total {
+			total = v
+		}
+	}
+	return total
+}
+
+func B(path string) int {
+
+	lines := file.ReadLinesFromFile(path)
+	seeds := parseSeeds(<-lines)
+	maps := ParseMaps(lines)
+
+	in := make(chan int)
+	out := chainMaps(in, maps)
+
+	// send seeds on the in channel
+	go func() {
+		defer close(in)
+		for i := 0; i < 2; i += 2 {
+			seed := seeds[i]
+			length := seeds[i+1]
+			for i := seed; i < seed+length; i++ {
+				in <- i
+			}
+		}
+	}()
 	// find minimum on out channel
 	total := math.MaxInt32
 	for v := range out {
