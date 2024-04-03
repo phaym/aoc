@@ -18,22 +18,10 @@ func A(path string) int {
 	lines := file.ReadLinesFromFile(path)
 	seeds := Seeds(<-lines)
 	maps := Maps(lines)
-	chain := make(chan int)
-	last := chain
-	for m := range maps {
-		out := make(chan int)
-		go ChainMap(last, m, out)
-		last = out
-	}
+	output := seedToOutput(maps, seeds)
 
-	go func() {
-		defer close(chain)
-		for _, seed := range seeds {
-			chain <- seed
-		}
-	}()
 	total := math.MaxInt32
-	for output := range last {
+	for output := range output {
 		if output < total {
 			total = output
 		}
@@ -41,7 +29,24 @@ func A(path string) int {
 	return total
 }
 
-func ChainMap(in chan int, m *Map, out chan int) {
+func seedToOutput(maps <-chan *Map, seeds []int) <-chan int {
+	chain := make(chan int)
+	last := chain
+	for m := range maps {
+		out := make(chan int)
+		go chainMaps(last, m, out)
+		last = out
+	}
+	go func() {
+		defer close(chain)
+		for _, seed := range seeds {
+			chain <- seed
+		}
+	}()
+	return last
+}
+
+func chainMaps(in chan int, m *Map, out chan int) {
 	defer close(out)
 	for inValue := range in {
 		out <- MapNumber(inValue, m)
