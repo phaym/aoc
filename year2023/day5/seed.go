@@ -18,7 +18,7 @@ func timer(name string) func() {
 
 func Run() {
 	defer timer("B")()
-	result := A("year2023/day5/input.txt")
+	result := B("year2023/day5/input.txt")
 	fmt.Println(result)
 }
 
@@ -48,31 +48,32 @@ func A(path string) int {
 	return total
 }
 
+type Seed struct {
+	Start  int
+	Length int
+}
+
 func B(path string) int {
 
 	lines := file.ReadLinesFromFile(path)
 	seeds := parseSeeds(<-lines)
 	maps := ParseMaps(lines)
 
-	in := make(chan int)
-	out := chainMaps(in, maps)
+	in := make(chan Seed)
+	out := chainMapsB(in, maps)
 
 	// send seeds on the in channel
 	go func() {
 		defer close(in)
-		for i := 0; i < 2; i += 2 {
-			seed := seeds[i]
-			length := seeds[i+1]
-			for i := seed; i < seed+length; i++ {
-				in <- i
-			}
+		for i := 0; i < len(seeds); i += 2 {
+			in <- Seed{seeds[i], seeds[i+1]}
 		}
 	}()
 	// find minimum on out channel
 	total := math.MaxInt32
-	for v := range out {
-		if v < total {
-			total = v
+	for seed := range out {
+		if seed.Start < total {
+			total = seed.Start
 		}
 	}
 	return total
@@ -83,6 +84,14 @@ func chainMaps(in chan int, maps <-chan *Map) <-chan int {
 	out := in
 	for m := range maps {
 		out = m.ChainOutput(out)
+	}
+	return out
+}
+
+func chainMapsB(in chan Seed, maps <-chan *Map) <-chan Seed {
+	out := in
+	for m := range maps {
+		out = m.ChainOutputB(out)
 	}
 	return out
 }

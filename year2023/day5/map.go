@@ -72,3 +72,71 @@ func (m *Map) Output(in int) int {
 	}
 	return in + delta
 }
+
+func (m *Map) ChainOutputB(in chan Seed) chan Seed {
+	out := make(chan Seed)
+	go func() {
+		defer close(out)
+		for value := range in {
+			seeds := m.OutputB(value)
+			for _, seed := range seeds {
+				out <- seed
+			}
+		}
+	}()
+	return out
+}
+
+func (m *Map) OutputB(seed Seed) []Seed {
+	seeds := make([]Seed, 0)
+	for _, r := range m.ranges {
+		seedEnd := seed.Start + seed.Length - 1
+		srcEnd := r.sourceStart + r.length - 1
+		if seed.Start <= srcEnd && r.sourceStart <= seedEnd {
+
+			// s: 5 - 10
+			// r: 5 - 10
+			if seed.Start == r.sourceStart && seedEnd <= srcEnd || seed.Start >= r.sourceStart && seedEnd == srcEnd {
+				seeds = append(seeds, Seed{r.destStart, seed.Length})
+				seed.Length = 0
+				break
+			} else if seed.Start > r.sourceStart && seedEnd < srcEnd {
+				// s:  6-9
+				// r: 5 - 10
+				delta := r.destStart - r.sourceStart
+				seeds = append(seeds, Seed{seed.Start + delta, seed.Length})
+				seed.Length = 0
+			} else if seed.Start < r.sourceStart && seedEnd < srcEnd {
+				// s: 1 - 7
+				// r:   5 - 10
+				currentSeedLength := r.sourceStart - seed.Start
+				newSeedLength := seed.Length - currentSeedLength
+				delta := r.destStart - r.sourceStart
+				seed.Length = currentSeedLength
+				seeds = append(seeds, Seed{r.sourceStart + delta, newSeedLength})
+			} else if seed.Start > r.sourceStart && seedEnd > srcEnd {
+				// s:  7 - 15
+				// r: 5 -10
+				currentSeedLength := seedEnd - srcEnd
+				newSeedLength := seed.Length - currentSeedLength
+				delta := r.destStart - r.sourceStart
+				seed.Length = currentSeedLength
+				seeds = append(seeds, Seed{seed.Start + delta, newSeedLength})
+				seed.Start = srcEnd + 1
+			} else if seed.Start < r.sourceStart && seedEnd > srcEnd {
+				// s: 1  -  12
+				// r: 	5-10
+				currentSeedLength := r.sourceStart - seed.Start
+				seed.Length = currentSeedLength
+				delta := r.destStart - r.sourceStart
+				seeds = append(seeds, Seed{r.sourceStart + delta, r.length})
+				newSeeds := m.OutputB(Seed{srcEnd + 1, seedEnd - srcEnd})
+				seeds = append(seeds, newSeeds...)
+			}
+		}
+	}
+	if seed.Length > 0 {
+		seeds = append(seeds, seed)
+	}
+	return seeds
+}
