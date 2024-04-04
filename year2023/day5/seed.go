@@ -72,6 +72,7 @@ func B(path string) int {
 	// find minimum on out channel
 	total := math.MaxInt32
 	for seed := range out {
+		fmt.Printf("out seed: %+v \n", seed)
 		if seed.Start < total {
 			total = seed.Start
 		}

@@ -1,6 +1,7 @@
 package day5
 
 import (
+	"fmt"
 	"regexp"
 	"strconv"
 	"strings"
@@ -89,6 +90,7 @@ func (m *Map) ChainOutputB(in chan Seed) chan Seed {
 
 func (m *Map) OutputB(seed Seed) []Seed {
 	seeds := make([]Seed, 0)
+	fmt.Printf("%+v becomes for map: %v ", seed, m.label)
 	for _, r := range m.ranges {
 		seedEnd := seed.Start + seed.Length - 1
 		srcEnd := r.sourceStart + r.length - 1
@@ -96,11 +98,12 @@ func (m *Map) OutputB(seed Seed) []Seed {
 
 			// s: 5 - 10
 			// r: 5 - 10
-			if seed.Start == r.sourceStart && seedEnd <= srcEnd || seed.Start >= r.sourceStart && seedEnd == srcEnd {
-				seeds = append(seeds, Seed{r.destStart, seed.Length})
-				seed.Length = 0
-				break
-			} else if seed.Start > r.sourceStart && seedEnd < srcEnd {
+			// if seed.Start == r.sourceStart && seedEnd <= srcEnd || seed.Start >= r.sourceStart && seedEnd == srcEnd {
+			// 	seeds = append(seeds, Seed{r.destStart, seed.Length})
+			// 	seed.Length = 0
+			// 	break
+			// } else
+			if seed.Start >= r.sourceStart && seedEnd <= srcEnd {
 				// s:  6-9
 				// r: 5 - 10
 				delta := r.destStart - r.sourceStart
@@ -138,5 +141,6 @@ func (m *Map) OutputB(seed Seed) []Seed {
 	if seed.Length > 0 {
 		seeds = append(seeds, seed)
 	}
+	fmt.Printf(" %v \n", seeds)
 	return seeds
 }

@@ -39,16 +39,19 @@ func TestMapNumberB(t *testing.T) {
 		},
 	}
 	cases := []struct {
-		in   Seed
-		want []Seed
+		mapObj *Map
+		in     Seed
+		want   []Seed
 	}{
 		{
+			mapObj,
 			Seed{5, 6}, // 5 - 10
 			[]Seed{
 				{57, 6},
 			},
 		},
 		{
+			mapObj,
 			Seed{1, 7}, // 1 - 7
 			[]Seed{
 				{57, 3},
@@ -56,6 +59,7 @@ func TestMapNumberB(t *testing.T) {
 			},
 		},
 		{
+			mapObj,
 			Seed{7, 9}, // 7 - 15
 			[]Seed{
 				{59, 4},
@@ -63,6 +67,7 @@ func TestMapNumberB(t *testing.T) {
 			},
 		},
 		{
+			mapObj,
 			Seed{1, 12}, // 1 - 12
 			[]Seed{
 				{57, 6},
@@ -71,14 +76,27 @@ func TestMapNumberB(t *testing.T) {
 			},
 		},
 		{
+			mapObj,
 			Seed{6, 4}, // 6 - 9
 			[]Seed{
 				{58, 4},
 			},
 		},
+		{
+			&Map{
+				ranges: []Range{
+					{88, 18, 7},
+					{18, 25, 70},
+				},
+			},
+			Seed{81, 14},
+			[]Seed{
+				{74, 14},
+			},
+		},
 	}
 	for i, c := range cases {
-		got := mapObj.OutputB(c.in)
+		got := c.mapObj.OutputB(c.in)
 		if !cmp.Equal(got, c.want) {
 			t.Errorf("case# %v SeedOutput(%v) == %v, want %v", i, c.in, got, c.want)
 		}
