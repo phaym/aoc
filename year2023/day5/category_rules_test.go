@@ -6,7 +6,7 @@ import (
 	"github.com/google/go-cmp/cmp"
 )
 
-func TesCategoryRule(t *testing.T) {
+func TestCategoryRule(t *testing.T) {
 	m := &CategoryRules{
 		rules: []Rule{
 			{50, 98, 2},
@@ -32,7 +32,7 @@ func TesCategoryRule(t *testing.T) {
 	}
 }
 
-func TesCategoryRuleB(t *testing.T) {
+func TestCategoryRuleB(t *testing.T) {
 	mapObj := &CategoryRules{
 		rules: []Rule{
 			{57, 5, 6},

@@ -92,7 +92,7 @@ func (category *CategoryRules) OutputB(seed Seed) []Seed {
 	for _, rule := range category.rules {
 		seedEnd := seed.Start + seed.Length - 1
 		srcEnd := rule.source + rule.length - 1
-		if seed.Start <= srcEnd && rule.dest <= seedEnd {
+		if seed.Start <= srcEnd && rule.source <= seedEnd {
 			delta := rule.dest - rule.source
 
 			// if seed.Start < rule. {
