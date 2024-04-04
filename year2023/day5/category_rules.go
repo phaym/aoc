@@ -12,8 +12,8 @@ type CategoryRules struct {
 }
 
 type Rule struct {
-	source int
 	dest   int
+	source int
 	length int
 }
 
@@ -45,10 +45,10 @@ func NewRange(line string) Rule {
 	if len(match) != 3 {
 		panic("couldn't parse range: " + line)
 	}
-	sourceStart, _ := strconv.Atoi(match[0])
-	destStart, _ := strconv.Atoi(match[1])
+	dest, _ := strconv.Atoi(match[0])
+	source, _ := strconv.Atoi(match[1])
 	length, _ := strconv.Atoi(match[2])
-	return Rule{sourceStart, destStart, length}
+	return Rule{dest, source, length}
 }
 
 func (m *CategoryRules) ChainOutput(in chan int) chan int {
@@ -64,9 +64,9 @@ func (m *CategoryRules) ChainOutput(in chan int) chan int {
 
 func (m *CategoryRules) Output(in int) int {
 	delta := 0
-	for _, r := range m.rules {
-		if in >= r.dest && in <= r.dest+r.length {
-			delta = r.source - r.dest
+	for _, rule := range m.rules {
+		if in >= rule.source && in <= rule.source+rule.length {
+			delta = rule.dest - rule.source
 			break
 		}
 	}
@@ -91,23 +91,28 @@ func (category *CategoryRules) OutputB(seed Seed) []Seed {
 	seeds := make([]Seed, 0)
 	for _, rule := range category.rules {
 		seedEnd := seed.Start + seed.Length - 1
-		srcEnd := rule.dest + rule.length - 1
+		srcEnd := rule.source + rule.length - 1
 		if seed.Start <= srcEnd && rule.dest <= seedEnd {
-			delta := rule.source - rule.dest
+			delta := rule.dest - rule.source
 
+			// if seed.Start < rule. {
+			// 	seeds = append(seeds, Seed{rule.dest + delta, seedEnd - rule.dest + 1})
+			// 	seed.Length = rule.dest - seed.Start
+			// }
+			// if seedEnd < srcEnd
 			// s:  6-9
 			// r: 5 - 10
-			if seed.Start >= rule.dest && seedEnd <= srcEnd {
+			if seed.Start >= rule.source && seedEnd <= srcEnd {
 				seed.Start += delta
 				break
-			} else if seed.Start < rule.dest && seedEnd < srcEnd {
+			} else if seed.Start < rule.source && seedEnd < srcEnd {
 				// s: 1 - 7
 				// r:   5 - 10
-				newSeedLength := seedEnd - rule.dest + 1
-				newSeedStart := rule.dest + delta
+				newSeedLength := seedEnd - rule.source + 1
+				newSeedStart := rule.source + delta
 				seeds = append(seeds, Seed{newSeedStart, newSeedLength})
-				seed.Length = rule.dest - seed.Start
-			} else if seed.Start > rule.dest && seedEnd > srcEnd {
+				seed.Length = rule.source - seed.Start
+			} else if seed.Start > rule.source && seedEnd > srcEnd {
 				// s:  7 - 15
 				// r: 5 -10
 				newSeedLength := srcEnd - seed.Start + 1
@@ -115,12 +120,12 @@ func (category *CategoryRules) OutputB(seed Seed) []Seed {
 				seeds = append(seeds, Seed{newSeedStart, newSeedLength})
 				seed.Length = seedEnd - srcEnd
 				seed.Start = srcEnd + 1
-			} else if seed.Start < rule.dest && seedEnd > srcEnd {
+			} else if seed.Start < rule.source && seedEnd > srcEnd {
 				// s: 1  -  12
 				// r: 	5-10
-				seeds = append(seeds, Seed{rule.dest + delta, rule.length})
+				seeds = append(seeds, Seed{rule.source + delta, rule.length})
 				seeds = append(seeds, Seed{srcEnd + 1, seedEnd - srcEnd})
-				seed.Length = rule.dest - seed.Start
+				seed.Length = rule.source - seed.Start
 			}
 		}
 	}
