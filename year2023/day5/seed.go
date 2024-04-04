@@ -25,7 +25,7 @@ func Run() {
 func A(path string) int {
 	lines := file.ReadLinesFromFile(path)
 	seeds := parseSeeds(<-lines)
-	maps := ParseMaps(lines)
+	maps := ParseCategories(lines)
 
 	in := make(chan int)
 	out := chainMaps(in, maps)
@@ -57,7 +57,7 @@ func B(path string) int {
 
 	lines := file.ReadLinesFromFile(path)
 	seeds := parseSeeds(<-lines)
-	maps := ParseMaps(lines)
+	maps := ParseCategories(lines)
 
 	in := make(chan Seed)
 	out := chainMapsB(in, maps)
@@ -80,7 +80,7 @@ func B(path string) int {
 }
 
 // chain all maps and return the final one
-func chainMaps(in chan int, maps <-chan *Map) <-chan int {
+func chainMaps(in chan int, maps <-chan *CategoryRules) <-chan int {
 	out := in
 	for m := range maps {
 		out = m.ChainOutput(out)
@@ -88,7 +88,7 @@ func chainMaps(in chan int, maps <-chan *Map) <-chan int {
 	return out
 }
 
-func chainMapsB(in chan Seed, maps <-chan *Map) <-chan Seed {
+func chainMapsB(in chan Seed, maps <-chan *CategoryRules) <-chan Seed {
 	out := in
 	for m := range maps {
 		out = m.ChainOutputB(out)

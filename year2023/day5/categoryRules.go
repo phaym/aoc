@@ -6,32 +6,32 @@ import (
 	"strings"
 )
 
-type Map struct {
-	label  string
-	ranges []Range
+type CategoryRules struct {
+	label string
+	rules []Rule
 }
 
-type Range struct {
-	destStart   int
-	sourceStart int
-	length      int
+type Rule struct {
+	source int
+	dest   int
+	length int
 }
 
-func ParseMaps(lines <-chan string) <-chan *Map {
-	out := make(chan *Map)
+func ParseCategories(lines <-chan string) <-chan *CategoryRules {
+	out := make(chan *CategoryRules)
 	go func() {
 		defer close(out)
-		m := &Map{}
+		m := &CategoryRules{}
 		for line := range lines {
 			if line == "" {
-				if len(m.ranges) > 0 {
+				if len(m.rules) > 0 {
 					out <- m
 				}
-				m = &Map{}
+				m = &CategoryRules{}
 			} else if strings.HasSuffix(line, ":") {
 				m.label = line
 			} else {
-				m.ranges = append(m.ranges, NewRange(line))
+				m.rules = append(m.rules, NewRange(line))
 			}
 		}
 		out <- m //EOF, last map is done
@@ -39,7 +39,7 @@ func ParseMaps(lines <-chan string) <-chan *Map {
 	return out
 }
 
-func NewRange(line string) Range {
+func NewRange(line string) Rule {
 	regex := regexp.MustCompile(`\b\d+\b`)
 	match := regex.FindAllString(line, 3)
 	if len(match) != 3 {
@@ -48,10 +48,10 @@ func NewRange(line string) Range {
 	sourceStart, _ := strconv.Atoi(match[0])
 	destStart, _ := strconv.Atoi(match[1])
 	length, _ := strconv.Atoi(match[2])
-	return Range{sourceStart, destStart, length}
+	return Rule{sourceStart, destStart, length}
 }
 
-func (m *Map) ChainOutput(in chan int) chan int {
+func (m *CategoryRules) ChainOutput(in chan int) chan int {
 	out := make(chan int)
 	go func() {
 		defer close(out)
@@ -62,18 +62,18 @@ func (m *Map) ChainOutput(in chan int) chan int {
 	return out
 }
 
-func (m *Map) Output(in int) int {
+func (m *CategoryRules) Output(in int) int {
 	delta := 0
-	for _, r := range m.ranges {
-		if in >= r.sourceStart && in <= r.sourceStart+r.length {
-			delta = r.destStart - r.sourceStart
+	for _, r := range m.rules {
+		if in >= r.dest && in <= r.dest+r.length {
+			delta = r.source - r.dest
 			break
 		}
 	}
 	return in + delta
 }
 
-func (m *Map) ChainOutputB(in chan Seed) chan Seed {
+func (m *CategoryRules) ChainOutputB(in chan Seed) chan Seed {
 	out := make(chan Seed)
 	go func() {
 		defer close(out)
@@ -87,27 +87,27 @@ func (m *Map) ChainOutputB(in chan Seed) chan Seed {
 	return out
 }
 
-func (m *Map) OutputB(seed Seed) []Seed {
+func (category *CategoryRules) OutputB(seed Seed) []Seed {
 	seeds := make([]Seed, 0)
-	for _, r := range m.ranges {
+	for _, rule := range category.rules {
 		seedEnd := seed.Start + seed.Length - 1
-		srcEnd := r.sourceStart + r.length - 1
-		if seed.Start <= srcEnd && r.sourceStart <= seedEnd {
-			delta := r.destStart - r.sourceStart
+		srcEnd := rule.dest + rule.length - 1
+		if seed.Start <= srcEnd && rule.dest <= seedEnd {
+			delta := rule.source - rule.dest
 
 			// s:  6-9
 			// r: 5 - 10
-			if seed.Start >= r.sourceStart && seedEnd <= srcEnd {
+			if seed.Start >= rule.dest && seedEnd <= srcEnd {
 				seed.Start += delta
 				break
-			} else if seed.Start < r.sourceStart && seedEnd < srcEnd {
+			} else if seed.Start < rule.dest && seedEnd < srcEnd {
 				// s: 1 - 7
 				// r:   5 - 10
-				newSeedLength := seedEnd - r.sourceStart + 1
-				newSeedStart := r.sourceStart + delta
+				newSeedLength := seedEnd - rule.dest + 1
+				newSeedStart := rule.dest + delta
 				seeds = append(seeds, Seed{newSeedStart, newSeedLength})
-				seed.Length = r.sourceStart - seed.Start
-			} else if seed.Start > r.sourceStart && seedEnd > srcEnd {
+				seed.Length = rule.dest - seed.Start
+			} else if seed.Start > rule.dest && seedEnd > srcEnd {
 				// s:  7 - 15
 				// r: 5 -10
 				newSeedLength := srcEnd - seed.Start + 1
@@ -115,13 +115,12 @@ func (m *Map) OutputB(seed Seed) []Seed {
 				seeds = append(seeds, Seed{newSeedStart, newSeedLength})
 				seed.Length = seedEnd - srcEnd
 				seed.Start = srcEnd + 1
-			} else if seed.Start < r.sourceStart && seedEnd > srcEnd {
+			} else if seed.Start < rule.dest && seedEnd > srcEnd {
 				// s: 1  -  12
 				// r: 	5-10
-				seeds = append(seeds, Seed{r.sourceStart + delta, r.length})
-				newSeeds := m.OutputB(Seed{srcEnd + 1, seedEnd - srcEnd})
-				seeds = append(seeds, newSeeds...)
-				seed.Length = r.sourceStart - seed.Start
+				seeds = append(seeds, Seed{rule.dest + delta, rule.length})
+				seeds = append(seeds, Seed{srcEnd + 1, seedEnd - srcEnd})
+				seed.Length = rule.dest - seed.Start
 			}
 		}
 	}

@@ -6,9 +6,9 @@ import (
 	"github.com/google/go-cmp/cmp"
 )
 
-func TestMapNumber(t *testing.T) {
-	m := &Map{
-		ranges: []Range{
+func TesCategoryRule(t *testing.T) {
+	m := &CategoryRules{
+		rules: []Rule{
 			{50, 98, 2},
 			{52, 50, 48},
 			{0, 1, 2},
@@ -27,19 +27,19 @@ func TestMapNumber(t *testing.T) {
 	for _, c := range cases {
 		got := m.Output(c.in)
 		if got != c.want {
-			t.Errorf("MapNumber(%v) == %v, want %v", c.in, got, c.want)
+			t.Errorf("CategoryRule(%v) == %v, want %v", c.in, got, c.want)
 		}
 	}
 }
 
-func TestMapNumberB(t *testing.T) {
-	mapObj := &Map{
-		ranges: []Range{
+func TesCategoryRuleB(t *testing.T) {
+	mapObj := &CategoryRules{
+		rules: []Rule{
 			{57, 5, 6},
 		},
 	}
 	cases := []struct {
-		mapObj *Map
+		mapObj *CategoryRules
 		in     Seed
 		want   []Seed
 	}{
@@ -83,8 +83,8 @@ func TestMapNumberB(t *testing.T) {
 			},
 		},
 		{
-			&Map{
-				ranges: []Range{
+			&CategoryRules{
+				rules: []Rule{
 					{88, 18, 7},
 					{18, 25, 70},
 				},
