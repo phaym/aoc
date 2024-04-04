@@ -94,35 +94,25 @@ func (category *CategoryRules) OutputB(seed Seed) []Seed {
 		srcEnd := rule.source + rule.length - 1
 		if seed.Start <= srcEnd && rule.source <= seedEnd {
 			delta := rule.dest - rule.source
-
-			// if seed.Start < rule. {
-			// 	seeds = append(seeds, Seed{rule.dest + delta, seedEnd - rule.dest + 1})
-			// 	seed.Length = rule.dest - seed.Start
-			// }
-			// if seedEnd < srcEnd
-			// s:  6-9
-			// r: 5 - 10
+			// complete overlap
 			if seed.Start >= rule.source && seedEnd <= srcEnd {
 				seed.Start += delta
 				break
 			} else if seed.Start < rule.source && seedEnd < srcEnd {
-				// s: 1 - 7
-				// r:   5 - 10
+				// overlap right
 				newSeedLength := seedEnd - rule.source + 1
 				newSeedStart := rule.source + delta
 				seeds = append(seeds, Seed{newSeedStart, newSeedLength})
 				seed.Length = rule.source - seed.Start
 			} else if seed.Start > rule.source && seedEnd > srcEnd {
-				// s:  7 - 15
-				// r: 5 -10
+				//overlap left
 				newSeedLength := srcEnd - seed.Start + 1
 				newSeedStart := seed.Start + delta
 				seeds = append(seeds, Seed{newSeedStart, newSeedLength})
 				seed.Length = seedEnd - srcEnd
 				seed.Start = srcEnd + 1
 			} else if seed.Start < rule.source && seedEnd > srcEnd {
-				// s: 1  -  12
-				// r: 	5-10
+				// overlap inner
 				seeds = append(seeds, Seed{rule.source + delta, rule.length})
 				seeds = append(seeds, Seed{srcEnd + 1, seedEnd - srcEnd})
 				seed.Length = rule.source - seed.Start
