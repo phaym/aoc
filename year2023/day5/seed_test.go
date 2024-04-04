@@ -26,7 +26,7 @@ func TestB(t *testing.T) {
 		want int
 	}{
 		{"input.test.txt", 46},
-		// {"input.txt", 173706076},
+		{"input.txt", 11611182},
 	}
 	for _, c := range cases {
 		got := B(c.in)
