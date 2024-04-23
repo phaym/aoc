@@ -17,10 +17,13 @@ func A(path string) int {
 	lines := file.ReadLinesFromFile(path)
 	times := readLine(<-lines)
 	distances := readLine(<-lines)
-
+	result := 1
+	for i := 0; i < len(times); i++ {
+		result *= computeWinCount(times[i], distances[i])
+	}
 	fmt.Println(times)
 	fmt.Println(distances)
-	return 0
+	return result
 }
 
 func readLine(line string) []int {
@@ -32,6 +35,16 @@ func readLine(line string) []int {
 	for i, num := range values {
 		numVal, _ := strconv.Atoi(num)
 		result[i] = numVal
+	}
+	return result
+}
+
+func computeWinCount(maxTime, distance int) int {
+	result := 0
+	for timeHeld := 0; timeHeld < maxTime; timeHeld++ {
+		if timeHeld*(maxTime-timeHeld) > distance {
+			result++
+		}
 	}
 	return result
 }
