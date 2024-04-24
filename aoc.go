@@ -1,11 +1,11 @@
 package main
 
 import (
-	"aoc/year2023/day6"
+	"aoc/year2023/day7"
 	"fmt"
 )
 
 func main() {
 	fmt.Println("start aoc")
-	day6.Run()
+	day7.Run()
 }

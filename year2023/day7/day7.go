@@ -10,7 +10,7 @@ import (
 )
 
 func Run() {
-	result := A("year2023/day6/input.txt")
+	result := A("year2023/day7/input.txt")
 	fmt.Println(result)
 }
 
