@@ -7,7 +7,7 @@ import (
 )
 
 func Run() {
-	result := A("year2023/day8/input.txt")
+	result := B("year2023/day8/input.txt")
 	fmt.Println(result)
 }
 
@@ -47,12 +47,14 @@ func A(path string) int {
 	return currentStep
 }
 
+var nodeMap = make(map[string]*Node)
+
 func B(path string) int {
 	lines := file.ReadLinesFromFile(path)
 	instructions := <-lines
 	<-lines
 	currentNodes := make([]*Node, 0)
-	nodeMap := make(map[string]*Node)
+
 	for line := range lines {
 		node := parseLine(line)
 		nodeMap[node.Name] = node
@@ -60,15 +62,16 @@ func B(path string) int {
 			currentNodes = append(currentNodes, node)
 		}
 	}
-	stepCount := stepsToFinalNode(nodeMap, instructions, 0, currentNodes)
+	stepCount := stepsToFinalNode(instructions, 0, currentNodes)
 	return stepCount
 }
 
-func stepsToFinalNode(nodeMap map[string]*Node, instructions string, currentStep int, currentNodes []*Node) int {
+func stepsToFinalNode(instructions string, currentStep int, currentNodes []*Node) int {
 	done := true
 	dir := string(instructions[currentStep%len(instructions)])
-	newNodes := make([]*Node, 0)
-	for _, node := range currentNodes {
+	for i := 0; i < len(currentNodes); i++ {
+		node := currentNodes[0]
+		currentNodes = currentNodes[1:]
 		if !node.IsEnd() {
 			done = false
 		}
@@ -76,12 +79,28 @@ func stepsToFinalNode(nodeMap map[string]*Node, instructions string, currentStep
 		if dir == "L" {
 			next = node.Left
 		}
-		newNodes = append(newNodes, nodeMap[next])
+		currentNodes = append(currentNodes, nodeMap[next])
 	}
 	if done {
 		return 0
 	}
-	return 1 + stepsToFinalNode(nodeMap, instructions, currentStep+1, newNodes)
+	return 1 + stepsToFinalNode(instructions, currentStep+1, currentNodes)
+}
+func stepsToFinalNode2(nodeMap map[string]*Node, instructions string, currentStep int, currentNodes []*Node) int {
+	dir := string(instructions[currentStep%len(instructions)])
+	newNodes := make([]*Node, 0)
+	for len(currentNodes) > 0 {
+		for _, node := range currentNodes {
+			if !node.IsEnd() {
+			}
+			next := node.Right
+			if dir == "L" {
+				next = node.Left
+			}
+			newNodes = append(newNodes, nodeMap[next])
+		}
+	}
+	return currentStep
 }
 
 func parseLine(line string) *Node {
