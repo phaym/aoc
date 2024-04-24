@@ -26,9 +26,18 @@ func A(path string) int {
 		node := parseLine(line)
 		nodeMap[node.Name] = node
 	}
-	fmt.Print(instructions)
-	fmt.Println(nodeMap)
-	return 0
+	currentNode := nodeMap["AAA"]
+	currentStep := 0
+	for currentNode.Name != "ZZZ" {
+		dir := string(instructions[currentStep%len(instructions)])
+		next := currentNode.Right
+		if dir == "L" {
+			next = currentNode.Left
+		}
+		currentNode = nodeMap[next]
+		currentStep++
+	}
+	return currentStep
 }
 
 func parseLine(line string) *Node {
