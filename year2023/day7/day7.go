@@ -4,6 +4,7 @@ import (
 	"aoc/util/file"
 	"fmt"
 	"slices"
+	"sort"
 	"strconv"
 	"strings"
 )
@@ -14,21 +15,26 @@ func Run() {
 }
 
 type Card struct {
-	hand       string
-	bid        int
-	typeCounts map[string]int
-	rank       int
+	hand string
+	bid  int
+	rank int
 }
 
-const (
-	DEFAULT = iota
-	HIGH
-	TWO
-	THREE
-	FULL
-	FOUR
-	FIVE
-)
+var rankMap = map[string]int{
+	"2": 2,
+	"3": 3,
+	"4": 4,
+	"5": 5,
+	"6": 6,
+	"7": 7,
+	"8": 8,
+	"9": 9,
+	"T": 10,
+	"J": 11,
+	"Q": 12,
+	"K": 13,
+	"A": 14,
+}
 
 func A(path string) int {
 	lines := file.ReadLinesFromFile(path)
@@ -42,37 +48,58 @@ func A(path string) int {
 
 func totalWinnings(cards []Card) int {
 	for i := range cards {
-		calcHand(&cards[i])
+		setCardValue(&cards[i])
 	}
-
-	return 3
+	sort.Slice(cards, func(i, j int) bool {
+		if cards[i].rank == cards[j].rank {
+			charIndex := 0
+			for cards[i].hand[charIndex] == cards[j].hand[charIndex] {
+				charIndex++
+			}
+			iChar := cards[i].hand[charIndex]
+			jChar := cards[j].hand[charIndex]
+			return rankMap[string(iChar)] < rankMap[string(jChar)]
+		} else {
+			return cards[i].rank < cards[j].rank
+		}
+	})
+	total := 0
+	for i, card := range cards {
+		total += card.bid*i + 1
+	}
+	return total
 }
 
-func calcHand(card *Card) {
+func setCardValue(card *Card) {
+	typeCounts := make(map[string]int)
 	for i := 0; i < len(card.hand); i++ {
-		card.typeCounts[string(card.hand[i])]++
+		typeCounts[string(card.hand[i])]++
 	}
-	card.rank = getRank(card)
-}
+	counts := make([]int, 0, len(typeCounts))
+	for _, v := range typeCounts {
+		counts = append(counts, v)
+	}
+	slices.Sort(counts)
+	rank := 0
+	highest := counts[len(counts)-1]
+	second := counts[len(counts)-2]
+	if highest == 1 {
+		rank = 1
+	} else if highest == 2 && second != 2 {
+		rank = 2
+	} else if highest == 2 && second == 2 {
+		rank = 3
+	} else if highest == 3 && second != 2 {
+		rank = 4
+	} else if highest == 3 && second == 2 {
+		rank = 5
+	} else if highest == 4 {
+		rank = 6
+	} else if highest == 5 {
+		rank = 7
+	}
 
-func getRank(card *Card) int {
-	counts := make([]int, 0)
-	for _, val := range card.typeCounts {
-		counts = append(counts, val)
-	}
-	if slices.Contains(counts, 5) {
-		return FIVE
-	} else if slices.Contains(counts, 4) {
-		return FOUR
-	} else if slices.Contains(counts, 3) && slices.Contains(counts, 2) {
-		return FULL
-	} else if slices.Contains(counts, 3) {
-		return THREE
-	} else if slices.Contains(counts, 2) {
-		return TWO
-	} else {
-		return HIGH
-	}
+	card.rank = rank
 }
 
 func parseLine(line string) Card {
@@ -80,9 +107,8 @@ func parseLine(line string) Card {
 	hand := split[0]
 	bid, _ := strconv.Atoi(split[1])
 	return Card{
-		hand:       hand,
-		bid:        bid,
-		typeCounts: make(map[string]int),
-		rank:       DEFAULT,
+		hand,
+		bid,
+		0,
 	}
 }

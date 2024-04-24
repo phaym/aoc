@@ -11,6 +11,7 @@ func TestA(t *testing.T) {
 	}{
 
 		{"input.test.txt", 6440},
+		{"input.test2.txt", 5},
 	}
 	for _, c := range cases {
 		got := A(c.in)
