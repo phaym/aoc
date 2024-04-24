@@ -65,7 +65,7 @@ func totalWinnings(cards []Card) int {
 	})
 	total := 0
 	for i, card := range cards {
-		total += card.bid*i + 1
+		total += card.bid * (i + 1)
 	}
 	return total
 }
@@ -82,7 +82,10 @@ func setCardValue(card *Card) {
 	slices.Sort(counts)
 	rank := 0
 	highest := counts[len(counts)-1]
-	second := counts[len(counts)-2]
+	second := 0
+	if highest < 5 {
+		second = counts[len(counts)-2]
+	}
 	if highest == 1 {
 		rank = 1
 	} else if highest == 2 && second != 2 {
