@@ -67,29 +67,39 @@ func B(path string) int {
 	return stepCount
 }
 
-func stepsToFinalNode(instructions string, currentNodes []*Node) int {
-	currentStep := 0
-	processing := true
-	for processing {
-		processing = false
-		dir := string(instructions[currentStep%len(instructions)])
-		for i := 0; i < len(currentNodes); i++ {
-			node := currentNodes[0]
-			currentNodes = currentNodes[1:]
-			if !node.IsEnd() {
-				processing = true
-			}
-			next := node.Right
+func stepsToFinalNode(instructions string, startNodes []*Node) int {
+	stepsToFinal := make([]int, 0)
+	for _, node := range startNodes {
+		currentStep := 0
+		for !node.IsEnd() {
+			dir := string(instructions[currentStep%len(instructions)])
+			nextName := node.Right
 			if dir == "L" {
-				next = node.Left
+				nextName = node.Left
 			}
-			currentNodes = append(currentNodes, nodeMap[next])
-		}
-		if processing {
+			node = nodeMap[nextName]
 			currentStep++
+			if node.IsEnd() {
+				stepsToFinal = append(stepsToFinal, currentStep)
+			}
 		}
 	}
-	return currentStep
+	result := stepsToFinal[0]
+	for i := 1; i < len(stepsToFinal); i++ {
+		result = lcm(result, stepsToFinal[i])
+	}
+	return result
+}
+
+func gcd(a, b int) int {
+	for b != 0 {
+		a, b = b, a%b
+	}
+	return a
+}
+
+func lcm(a, b int) int {
+	return a / gcd(a, b) * b
 }
 
 func parseLine(line string) *Node {
