@@ -10,7 +10,7 @@ func TestA(t *testing.T) {
 		want int
 	}{
 
-		{"input.test.txt", 2},
+		{"input.test.txt", 114},
 	}
 	for _, c := range cases {
 		got := A(c.in)
