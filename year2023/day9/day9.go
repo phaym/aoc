@@ -3,12 +3,13 @@ package day9
 import (
 	"aoc/util/file"
 	"fmt"
+	"slices"
 	"strconv"
 	"strings"
 )
 
 func Run() {
-	result := A("year2023/day9/input.txt")
+	result := B("year2023/day9/input.txt")
 	fmt.Println(result)
 }
 
@@ -17,6 +18,18 @@ func A(path string) int {
 	result := 0
 	for line := range lines {
 		prediction := getPrediction(parseLine(line))
+		result += prediction
+	}
+	return result
+}
+
+func B(path string) int {
+	lines := file.ReadLinesFromFile(path)
+	result := 0
+	for line := range lines {
+		history := parseLine(line)
+		slices.Reverse(history)
+		prediction := getPrediction(history)
 		result += prediction
 	}
 	return result
