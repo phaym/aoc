@@ -21,55 +21,54 @@ var vectors = [4][2]int{up, down, right, left}
 func A(path string) int {
 	lines := file.ReadLinesFromFile(path)
 	tiles, startRow, startCol := parseLines(lines)
-	nextTile := ""
-	var moveVector [2]int
-	for _, currentVector := range vectors {
-		nextRow, nextCol := startRow+currentVector[0], startCol+currentVector[1]
-		if nextRow < 0 || nextRow > len(tiles)-1 || nextCol < 0 || nextCol > len(tiles[0])-1 {
-			continue
-		}
+	var firstVector [2]int
+	// find first move
+	for _, vector := range vectors {
+		nextRow, nextCol := startRow+vector[0], startCol+vector[1]
 		nextTile := string(tiles[nextRow][nextCol])
-		if vector, error := getMoveVector(currentVector, nextTile); error == nil {
-			moveVector = vector
+		if vector, error := getNextVector(vector, nextTile); error == nil {
+			firstVector = vector
 			break
 		}
 	}
 	steps := 1
-	row, col := startRow+moveVector[0], startCol+moveVector[1]
-	for nextTile != "S" {
-		row += moveVector[0]
-		col += moveVector[1]
-		nextTile = string(tiles[row][col])
-		moveVector, _ = getMoveVector(moveVector, nextTile)
+	lastVector := firstVector
+	row, col := startRow+lastVector[0], startCol+lastVector[1]
+	for row != startRow || col != startCol {
+		currentTile := string(tiles[row][col])
+		vector, _ := getNextVector(lastVector, currentTile)
+		row += vector[0]
+		col += vector[1]
 		steps++
+		lastVector = vector
 	}
 	return steps / 2
 }
 
-func getMoveVector(vector [2]int, current string) ([2]int, error) {
-	if current == "-" && vector == right {
+func getNextVector(fromVector [2]int, current string) ([2]int, error) {
+	if current == "-" && fromVector == right {
 		return right, nil
-	} else if current == "-" && vector == left {
+	} else if current == "-" && fromVector == left {
 		return left, nil
-	} else if current == "|" && vector == up {
+	} else if current == "|" && fromVector == up {
 		return up, nil
-	} else if current == "|" && vector == down {
+	} else if current == "|" && fromVector == down {
 		return down, nil
-	} else if current == "F" && vector == left {
+	} else if current == "F" && fromVector == left {
 		return down, nil
-	} else if current == "F" && vector == up {
+	} else if current == "F" && fromVector == up {
 		return right, nil
-	} else if current == "7" && vector == right {
+	} else if current == "7" && fromVector == right {
 		return down, nil
-	} else if current == "7" && vector == up {
+	} else if current == "7" && fromVector == up {
 		return left, nil
-	} else if current == "J" && vector == down {
+	} else if current == "J" && fromVector == down {
 		return left, nil
-	} else if current == "J" && vector == right {
+	} else if current == "J" && fromVector == right {
 		return up, nil
-	} else if current == "L" && vector == down {
+	} else if current == "L" && fromVector == down {
 		return right, nil
-	} else if current == "L" && vector == left {
+	} else if current == "L" && fromVector == left {
 		return up, nil
 	} else {
 		return up, errors.New("invalid dir")
@@ -88,5 +87,5 @@ func parseLines(lines <-chan string) ([]string, int, int) {
 		tiles = append(tiles, line)
 		row++
 	}
-	return tiles, startX, startY
+	return tiles, startY, startX
 }
