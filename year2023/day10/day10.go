@@ -32,17 +32,13 @@ func A(path string) int {
 			break
 		}
 	}
-	steps := 1
-	for len(vector) == 2 {
+	steps := 0
+	var vectorErr error
+	for vectorErr == nil {
 		row += vector[0]
 		col += vector[1]
 		currentTile := string(tiles[row][col])
-		var err error
-		vector, err = getNextVector(vector, currentTile)
-		if err != nil {
-			fmt.Printf("found %v quitting.", currentTile)
-			break
-		}
+		vector, vectorErr = getNextVector(vector, currentTile)
 		steps++
 	}
 	return steps / 2
