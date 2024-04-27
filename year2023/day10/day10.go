@@ -20,58 +20,61 @@ var vectors = [4][2]int{up, down, right, left}
 
 func A(path string) int {
 	lines := file.ReadLinesFromFile(path)
-	tiles, startRow, startCol := parseLines(lines)
-	var firstVector [2]int
+	tiles, row, col := parseLines(lines)
 	// find first move
-	for _, vector := range vectors {
-		nextRow, nextCol := startRow+vector[0], startCol+vector[1]
+	var vector [2]int
+	for _, dir := range vectors {
+		nextRow, nextCol := row+dir[0], col+dir[1]
 		nextTile := string(tiles[nextRow][nextCol])
-		if vector, error := getNextVector(vector, nextTile); error == nil {
-			firstVector = vector
+		var err error
+		if _, err = getNextVector(dir, nextTile); err == nil {
+			vector = dir
 			break
 		}
 	}
 	steps := 1
-	lastVector := firstVector
-	row, col := startRow+lastVector[0], startCol+lastVector[1]
-	for row != startRow || col != startCol {
-		currentTile := string(tiles[row][col])
-		vector, _ := getNextVector(lastVector, currentTile)
+	for len(vector) == 2 {
 		row += vector[0]
 		col += vector[1]
+		currentTile := string(tiles[row][col])
+		var err error
+		vector, err = getNextVector(vector, currentTile)
+		if err != nil {
+			fmt.Printf("found %v quitting.", currentTile)
+			break
+		}
 		steps++
-		lastVector = vector
 	}
 	return steps / 2
 }
 
-func getNextVector(fromVector [2]int, current string) ([2]int, error) {
-	if current == "-" && fromVector == right {
+func getNextVector(dir [2]int, current string) ([2]int, error) {
+	if current == "-" && dir == right {
 		return right, nil
-	} else if current == "-" && fromVector == left {
+	} else if current == "-" && dir == left {
 		return left, nil
-	} else if current == "|" && fromVector == up {
+	} else if current == "|" && dir == up {
 		return up, nil
-	} else if current == "|" && fromVector == down {
+	} else if current == "|" && dir == down {
 		return down, nil
-	} else if current == "F" && fromVector == left {
+	} else if current == "F" && dir == left {
 		return down, nil
-	} else if current == "F" && fromVector == up {
+	} else if current == "F" && dir == up {
 		return right, nil
-	} else if current == "7" && fromVector == right {
+	} else if current == "7" && dir == right {
 		return down, nil
-	} else if current == "7" && fromVector == up {
+	} else if current == "7" && dir == up {
 		return left, nil
-	} else if current == "J" && fromVector == down {
+	} else if current == "J" && dir == down {
 		return left, nil
-	} else if current == "J" && fromVector == right {
+	} else if current == "J" && dir == right {
 		return up, nil
-	} else if current == "L" && fromVector == down {
+	} else if current == "L" && dir == down {
 		return right, nil
-	} else if current == "L" && fromVector == left {
+	} else if current == "L" && dir == left {
 		return up, nil
 	} else {
-		return up, errors.New("invalid dir")
+		return [2]int{}, errors.New("invalid dir")
 	}
 }
 
