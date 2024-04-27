@@ -8,7 +8,7 @@ import (
 )
 
 func Run() {
-	result := A("year2023/day10/input.txt")
+	result := B("year2023/day10/input.txt")
 	fmt.Println(result)
 }
 
@@ -31,7 +31,7 @@ func A(path string) int {
 		}
 	}
 
-	// traverse tiles until error when returning to 'S'
+	// traverse tiles back to 'S'
 	steps := 0
 	row, col := startRow, startCol
 	vector := startVector
@@ -40,6 +40,34 @@ func A(path string) int {
 		row, col = row+vector[0], col+vector[1]
 		currentTile := string(tiles[row][col])
 		vector, err = getNextVector(vector, currentTile)
+		steps++
+	}
+	return steps / 2
+}
+
+func B(path string) int {
+	lines := file.ReadLinesFromFile(path)
+	tiles, startRow, startCol := parseLines(lines)
+	// find first possible direction from 'S'
+	var startVector [2]int
+	for _, dir := range vectors {
+		currentTile := string(tiles[startRow+dir[0]][startCol+dir[1]])
+		if _, err := getNextVector(dir, currentTile); err == nil {
+			startVector = dir
+			break
+		}
+	}
+
+	// traverse tiles back to 'S'
+	steps := 0
+	row, col := startRow, startCol
+	vector := startVector
+	var err error
+	for err == nil {
+		row, col = row+vector[0], col+vector[1]
+		currentTile := string(tiles[row][col])
+		vector, err = getNextVector(vector, currentTile)
+		tiles[row][col] = rune("#")
 		steps++
 	}
 	return steps / 2

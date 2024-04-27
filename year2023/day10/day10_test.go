@@ -20,18 +20,20 @@ func TestA(t *testing.T) {
 	}
 }
 
-// func TestB(t *testing.T) {
-// 	cases := []struct {
-// 		in   string
-// 		want int
-// 	}{
+func TestB(t *testing.T) {
+	cases := []struct {
+		in   string
+		want int
+	}{
 
-// 		{"input.test.txt", 2},
-// 	}
-// 	for _, c := range cases {
-// 		got := B(c.in)
-// 		if got != c.want {
-// 			t.Errorf("DecodeFile(%q) == %v, want %v", c.in, got, c.want)
-// 		}
-// 	}
-// }
+		{"input.testB.1.txt", 4},
+		{"input.testB.2.txt", 8},
+		{"input.testB.3.txt", 10},
+	}
+	for _, c := range cases {
+		got := B(c.in)
+		if got != c.want {
+			t.Errorf("DecodeFile(%q) == %v, want %v", c.in, got, c.want)
+		}
+	}
+}
