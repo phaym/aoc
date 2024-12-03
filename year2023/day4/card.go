@@ -1,12 +1,12 @@
 package day4
 
 import (
-	"aoc/util/channels"
-	"aoc/util/file"
 	"fmt"
 	"regexp"
 	"strconv"
 	"strings"
+	"year2023/util/channels"
+	"year2023/util/file"
 )
 
 func Run() {

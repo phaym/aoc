@@ -1,4 +1,4 @@
-module aoc
+module year2023
 
 go 1.22.1
 

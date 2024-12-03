@@ -1,10 +1,10 @@
 package day6
 
 import (
-	"aoc/util/file"
 	"fmt"
 	"strconv"
 	"strings"
+	"year2023/util/file"
 )
 
 func Run() {

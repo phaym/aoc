@@ -1,12 +1,12 @@
 package day5
 
 import (
-	"aoc/util/file"
 	"fmt"
 	"math"
 	"regexp"
 	"strconv"
 	"time"
+	"year2023/util/file"
 )
 
 func timer(name string) func() {

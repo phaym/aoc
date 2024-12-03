@@ -1,10 +1,10 @@
 package day10
 
 import (
-	"aoc/util/file"
 	"errors"
 	"fmt"
 	"strings"
+	"year2023/util/file"
 )
 
 func Run() {

@@ -1,11 +1,11 @@
 package day9
 
 import (
-	"aoc/util/file"
 	"fmt"
 	"slices"
 	"strconv"
 	"strings"
+	"year2023/util/file"
 )
 
 func Run() {

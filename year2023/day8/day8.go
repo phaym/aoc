@@ -1,10 +1,10 @@
 package day8
 
 import (
-	"aoc/util/file"
 	"fmt"
 	"regexp"
 	"strings"
+	"year2023/util/file"
 )
 
 func Run() {

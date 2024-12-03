@@ -1,12 +1,12 @@
 package day7
 
 import (
-	"aoc/util/file"
 	"fmt"
 	"slices"
 	"sort"
 	"strconv"
 	"strings"
+	"year2023/util/file"
 )
 
 func Run() {
