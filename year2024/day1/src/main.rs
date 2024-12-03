@@ -1,7 +1,6 @@
-mod part1;
-mod part2;
+pub mod day1;
 
 fn main() {
-    part1::run("./input.txt");
-    part2::run("./input.txt");
+    day1::part1::run("./input.txt");
+    day1::part2::run("./input.txt");
 }
