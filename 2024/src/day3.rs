@@ -3,15 +3,23 @@ use std::{
     io::{BufRead, BufReader},
 };
 
+use regex::Regex;
+
 pub fn parse_file(file_path: &str) -> Vec<(i32, i32)> {
     let file = fs::File::open(file_path).unwrap();
     let buf = BufReader::new(file);
-    let nums_to_multiply: Vec<(i32, i32)> = Vec::new();
-    for line in buf.lines() {
-        println!("line: {:?}", line);
+    let mut nums_to_multiply: Vec<(i32, i32)> = Vec::new();
+    for line in buf.lines().map(|l| l.unwrap()) {
+        let re = Regex::new(r"mul\((\d+),(\d+)\)").unwrap();
+        for (_, [num1, num2]) in re.captures_iter(&line).map(|c| c.extract()) {
+            let values = (num1.parse::<i32>().unwrap(), num2.parse::<i32>().unwrap());
+            nums_to_multiply.push(values);
+        }
     }
+    println!("nums: {:?}", nums_to_multiply);
     nums_to_multiply
 }
+
 pub mod part1 {
     use super::parse_file;
 
