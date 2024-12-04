@@ -32,27 +32,24 @@ pub mod part1 {
     fn get_safe_count(reports: Vec<Vec<i32>>) -> i32 {
         let mut safe_count = 0;
         for level in reports.iter() {
-            let safe = check_if_safe(level);
+            let safe = is_safe(level);
             if safe {
                 safe_count += 1;
             }
         }
         safe_count
     }
-    pub fn check_if_safe(level: &Vec<i32>) -> bool {
+    pub fn is_safe(level: &Vec<i32>) -> bool {
         let mut previous_diff: i32 = 0;
-        let mut left = 0;
-        for right in 1..level.len() {
-            let diff = level[right] - level[left];
+        for i in 1..level.len() {
+            let diff = level[i] - level[i - 1];
             let has_direction_change =
                 diff < 0 && previous_diff > 0 || diff > 0 && previous_diff < 0;
             let has_invalid_diff = diff.abs() > 3 || diff.abs() < 1;
             if has_direction_change || has_invalid_diff {
                 return false;
-            } else {
-                left = right;
-                previous_diff = diff;
             }
+            previous_diff = diff;
         }
         return true;
     }
@@ -72,7 +69,7 @@ pub mod part2 {
     fn get_safe_count(reports: Vec<Vec<i32>>) -> i32 {
         let mut safe_count = 0;
         for level in reports.iter() {
-            let safe = check_if_safe(level);
+            let safe = is_safe(level);
             if safe {
                 safe_count += 1;
             }
@@ -80,12 +77,12 @@ pub mod part2 {
         safe_count
     }
 
-    pub fn is_invalid_diff(diff: i32, expect_positive: bool) -> bool {
+    pub fn is_invalid_diff(diff: i32, is_increasing: bool) -> bool {
         (diff.abs() > 3 || diff.abs() < 1)
-            || (expect_positive && diff < 0 || !expect_positive && diff > 0)
+            || (is_increasing && diff < 0 || !is_increasing && diff > 0)
     }
 
-    pub fn check_if_safe(level: &Vec<i32>) -> bool {
+    pub fn is_safe(level: &Vec<i32>) -> bool {
         let mut diffs: Vec<i32> = Vec::new();
         let mut pos_count: i32 = 0;
         let mut neg_count: i32 = 0;
@@ -98,37 +95,25 @@ pub mod part2 {
                 neg_count += 1;
             }
         }
-        println!(
-            "starting diffs for {:?} are {:?} pos_count:{}, neg_count:{}",
-            level, diffs, pos_count, neg_count
-        );
-        if pos_count > 1 && neg_count > 1 {
-            println!("too many direction changes, unsafe");
-            return false;
-        }
-        let is_positive = pos_count > neg_count;
+
+        let is_increasing = pos_count > neg_count;
         let mut unsafe_count = 0;
         for i in 0..diffs.len() {
             let current_diff = diffs[i];
-            if is_invalid_diff(current_diff, is_positive) {
+            if is_invalid_diff(current_diff, is_increasing) {
                 unsafe_count += 1;
-                println!(
-                    "current invalid_diff diff {} i:{} len:{}",
-                    current_diff,
-                    i,
-                    diffs.len()
-                );
                 if unsafe_count > 1 {
                     println!("unsafe count exceeded, unsafe");
                     return false;
-                } else if unsafe_count == 1 && i == diffs.len() - 1 {
-                    println!("only last level is unsafe, safe!");
+                } else if i == diffs.len() - 1 {
+                    println!("only last level could be unsafe, safe!");
                     return true;
                 }
-                if i < diffs.len() - 1 && !is_invalid_diff(current_diff + diffs[i + 1], is_positive)
+                if i < diffs.len() - 1
+                    && !is_invalid_diff(current_diff + diffs[i + 1], is_increasing)
                 {
                     diffs[i + 1] += current_diff;
-                } else if i > 0 && is_invalid_diff(current_diff + diffs[i - 1], is_positive) {
+                } else if i > 0 && is_invalid_diff(current_diff + diffs[i - 1], is_increasing) {
                     println!("could not be fixed, unsafe");
                     return false;
                 }
@@ -204,7 +189,7 @@ mod tests {
             (vec![1, 2, 2, 4, 2], false), // remove 40
         ];
         for (input, expected) in tests {
-            let result = part2::check_if_safe(&input);
+            let result = part2::is_safe(&input);
             assert_eq!(
                 result, expected,
                 "failed with:{:?} expected:{} ",
