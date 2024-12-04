@@ -65,45 +65,62 @@ pub fn validate_diff(current: i32, next: i32) -> bool {
     (current.abs() > 3 || current.abs() < 1) || (current < 0 && next > 0 || current > 0 && next < 0)
 }
 
+pub fn is_invalid_diff(diff: i32, expect_positive: bool) -> bool {
+    (diff.abs() > 3 || diff.abs() < 1)
+        || (expect_positive && diff < 0 || !expect_positive && diff > 0)
+}
+
 pub fn check_if_safe_2(level: &Vec<i32>) -> bool {
     let mut diffs: Vec<i32> = Vec::new();
+    let mut pos_count: i32 = 0;
+    let mut neg_count: i32 = 0;
     for i in 1..level.len() {
-        diffs.push(level[i] - level[i - 1]);
+        let diff = level[i] - level[i - 1];
+        diffs.push(diff);
+        if diff > 0 {
+            pos_count += 1;
+        } else if diff < 0 {
+            neg_count += 1;
+        }
     }
-    println!("starting diffs for {:?} are {:?}", level, diffs);
+    println!(
+        "starting diffs for {:?} are {:?} pos_count:{}, neg_count:{}",
+        level, diffs, pos_count, neg_count
+    );
+    if pos_count > 1 && neg_count > 1 {
+        println!("too many direction changes, unsafe");
+        return false;
+    }
+    let is_positive = pos_count > neg_count;
     let mut unsafe_count = 0;
-    for i in 0..diffs.len() - 1 {
-        if !validate_diff(diffs[i], diffs[i + 1]) {
+    for i in 0..diffs.len() {
+        let current_diff = diffs[i];
+        if is_invalid_diff(current_diff, is_positive) {
             unsafe_count += 1;
+            println!(
+                "current invalid_diff diff {} i:{} len:{}",
+                current_diff,
+                i,
+                diffs.len()
+            );
             if unsafe_count > 1 {
-                println!("removed more then 1 level");
+                println!("unsafe count exceeded, unsafe");
                 return false;
+            } else if unsafe_count == 1 && i == diffs.len() - 1 {
+                println!("only last level is unsafe, safe!");
+                return true;
             }
-            if i < diffs.len() - 1 && validate_diff(diffs[i] + diffs[i + 1], diffs[i + 2]) {
-                diffs[i + 1] = diffs[i] + diffs[i + 1];
+            if i < diffs.len() - 1 && !is_invalid_diff(current_diff + diffs[i + 1], is_positive) {
+                diffs[i + 1] += current_diff;
+            } else if i > 0 && is_invalid_diff(current_diff + diffs[i - 1], is_positive) {
+                println!("could not be fixed, unsafe");
+                return false;
             }
             diffs[i] = 0;
         }
     }
-    // println!("after abs diffs for {:?} are {:?}", level, diffs);
-    // println!("unsafe_count: {} ", unsafe_count);
-    // for i in 0..diffs.len() - 1 {
-    //     if diffs[i] < 0 && diffs[i + 1] > 0 || diffs[i] > 0 && diffs[i + 1] < 0 {
-    //         unsafe_count += 1;
-    //         if unsafe_count > 1 {
-    //             return false;
-    //         }
-    //         diffs[i + 1] = diffs[i] + diffs[i + 1];
-    //         diffs[i] = 0;
-    //     };
-    // }
-    println!("diffs for {:?} are {:?}", level, diffs);
-    println!("unsafe_count: {} ", unsafe_count);
-    if unsafe_count > 1 {
-        return false;
-    } else {
-        return true;
-    }
+    println!("reached end, safe");
+    return true;
 }
 
 pub mod part1 {
@@ -177,6 +194,7 @@ mod tests {
             (vec![40, 50, 43, 46, 47], true, 0), // remove 40
             (vec![10, 12, 8, 6], true, 0),       // remove 40
             (vec![10, 52, 53, 54], true, 0),     // remove 40
+            (vec![], true, 0),                   // remove 40
         ];
         for (input, expected, max_bad_levels) in tests {
             let result = check_if_safe_2(&input);
@@ -189,6 +207,18 @@ mod tests {
     }
 
     #[test]
+    pub fn more_tests() {
+        let tests = vec![(vec![1, 2, 2, 4, 2], false)];
+        for (input, expected) in tests {
+            let result = check_if_safe_2(&input);
+            assert_eq!(
+                result, expected,
+                "failed with:{:?} expected:{} ",
+                input, expected
+            );
+        }
+    }
+    #[test]
     pub fn test_check_if_safe() {
         let tests = vec![
             // (vec![7, 6, 4, 2, 1], true, 0),
@@ -199,7 +229,7 @@ mod tests {
             (vec![8, 6, 9, 4, 5], false, 1),
             (vec![9, 3, 5, 7, 8], true, 1),  // remove 0 for decreasing
             (vec![1, 3, 5, 7, 3], true, 1),  // remove 4
-            (vec![1, 5, 3, 2, 1], true, 1),  // remove 0 for increasing
+            (vec![1, 5, 3, 2, 1], true, 1),  // remove 0 for decreasing
             (vec![10, 5, 3, 2, 1], true, 1), // remove 0 for decreasing too much
             (vec![1, 5, 6, 7, 8], true, 1),  // remove 0 for increasing too much
             (vec![1, 5, 2, 4, 5], true, 1),  // remove 1
