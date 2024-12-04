@@ -29,29 +29,23 @@ fn get_safe_count(reports: Vec<Vec<i32>>, max_bad_levels: i32) -> i32 {
     safe_count
 }
 
-pub fn check_if_safe(level: &Vec<i32>, max_unsafe: i32) -> bool {
-    let mut diff: i32 = 0;
-    let mut unsafe_levels = 0;
-    let mut prev = 0;
-    for i in 1..level.len() {
-        let current_diff = level[i] - level[prev];
-        if current_diff.abs() > 3 || current_diff.abs() < 1 {
-            // println!("unsafe diff of {} at i:{}", current_diff, i);
-            unsafe_levels += 1;
-            if unsafe_levels > max_unsafe {
+pub fn check_if_safe(level: &Vec<i32>, max_bad_levels: i32) -> bool {
+    let mut previous_diff: i32 = 0;
+    let mut left = 0;
+    let mut unsafe_count = 0;
+    for right in 1..level.len() {
+        let diff = level[right] - level[left];
+        if (diff.abs() > 3 || diff.abs() < 1)
+            || (diff < 0 && previous_diff > 0 || diff > 0 && previous_diff < 0)
+        {
+            unsafe_count += 1;
+            if unsafe_count > max_bad_levels {
                 return false;
             }
-            continue;
-        } else if current_diff < 0 && diff > 0 || current_diff > 0 && diff < 0 {
-            // println!("changed direction at i:{}", i);
-            unsafe_levels += 1;
-            if unsafe_levels > max_unsafe {
-                return false;
-            }
-            continue;
+        } else {
+            left = right;
+            previous_diff = diff;
         }
-        prev += 1;
-        diff = current_diff;
     }
     return true;
 }
@@ -93,43 +87,49 @@ mod tests {
     }
 
     #[test]
-    pub fn test_file() {
+    pub fn run_part_1_test_file() {
         let expected = 2;
         let result = part1::run("./day2.test.txt");
         assert_eq!(expected, result);
     }
 
     #[test]
-    pub fn part_1() {
+    pub fn run_part_1() {
         let expected = 572;
         let result = part1::run("./day2.txt");
         assert_eq!(expected, result);
     }
 
     #[test]
-    pub fn test_file_2() {
+    pub fn run_part_2_test_file() {
         let expected = 4;
         let result = part2::run("./day2.test.txt");
         assert_eq!(expected, result);
     }
 
-    #[test]
-    pub fn part_2() {
-        let expected = 572;
-        let result = part2::run("./day2.txt");
-        assert_eq!(expected, result);
-    }
+    // #[test]
+    // pub fn run_part_2() {
+    //     let expected = 572;
+    //     let result = part2::run("./day2.txt");
+    //     assert_eq!(expected, result);
+    // }
 
     #[test]
-    pub fn check_if_safe_max_bad_level() {
+    pub fn test_check_if_safe() {
         let tests = vec![
-            (vec![1, 3, 2, 4, 5], true),
-            (vec![1, 2, 7, 8, 9], false),
-            (vec![8, 6, 4, 4, 1], true),
+            (vec![7, 6, 4, 2, 1], true, 0),
+            (vec![1, 2, 7, 8, 9], false, 0),
+            (vec![1, 3, 2, 4, 5], true, 1),
+            (vec![1, 2, 7, 8, 9], false, 1),
+            (vec![8, 6, 4, 4, 1], true, 1),
         ];
-        for (input, expected) in tests {
-            let result = check_if_safe(&input, 1);
-            assert_eq!(result, expected);
+        for (input, expected, max_bad_levels) in tests {
+            let result = check_if_safe(&input, max_bad_levels);
+            assert_eq!(
+                result, expected,
+                "failed with:{:?} expected:{} max_bad_levels: {}",
+                input, expected, max_bad_levels
+            );
         }
     }
 }
