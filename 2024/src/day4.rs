@@ -13,65 +13,38 @@ pub mod part1 {
         let horizontal: i32 = puzzle.lines().map(|line| count_matches(line)).sum();
         horizontal
             + count_vertical(puzzle)
-            + count_diagonal_up_left(puzzle)
-            + count_diagonal_up_right(puzzle)
+            + count_diagonal(puzzle, true)
+            + count_diagonal(puzzle, false)
     }
 
-    pub fn count_diagonal_up_left(puzzle: &str) -> i32 {
+    pub fn count_diagonal(puzzle: &str, reverse: bool) -> i32 {
         let char_matrix: Vec<Vec<char>> =
             puzzle.lines().map(|line| line.chars().collect()).collect();
         let mut count = 0;
 
         let mut row = 0;
-        let mut col = char_matrix.len() - 1;
+        let mut col = if reverse { char_matrix.len() - 1 } else { 0 };
+        let col_end = if reverse { 0 } else { char_matrix.len() - 1 };
         loop {
             let mut diagonal_word = String::new();
-            let (mut curr_col, mut curr_row) = (col, row);
+            let (mut char_col, mut char_row) = (col, row);
             loop {
-                diagonal_word.push(char_matrix[curr_row][curr_col]);
-                if curr_col == 0 || curr_row == 0 {
+                diagonal_word.push(char_matrix[char_row][char_col]);
+                if char_col == col_end || char_row == 0 {
                     break;
                 }
-                curr_row -= 1;
-                curr_col -= 1;
+                char_row -= 1;
+                char_col = if reverse { char_col - 1 } else { char_col + 1 };
             }
             count += count_matches(&diagonal_word);
-            if row == char_matrix.len() - 1 && col == 0 {
+            if row == char_matrix.len() - 1 && col == col_end {
                 break;
             }
             if row < char_matrix.len() - 1 {
                 row += 1;
             } else {
-                col -= 1;
+                col = if reverse { col - 1 } else { col + 1 };
             }
-        }
-        count
-    }
-
-    pub fn count_diagonal_up_right(puzzle: &str) -> i32 {
-        let char_matrix: Vec<Vec<char>> =
-            puzzle.lines().map(|line| line.chars().collect()).collect();
-        let mut count = 0;
-
-        let mut row = 0;
-        let mut col = 0;
-        while row < char_matrix.len() - 1 || col < char_matrix.len() {
-            let mut diagonal_word = String::new();
-            let (mut curr_col, mut curr_row) = (col, row);
-            loop {
-                diagonal_word.push(char_matrix[curr_row][curr_col]);
-                if curr_row == 0 || curr_col == char_matrix.len() - 1 {
-                    break;
-                }
-                curr_row -= 1;
-                curr_col += 1;
-            }
-            if row < char_matrix.len() - 1 {
-                row += 1;
-            } else {
-                col += 1;
-            }
-            count += count_matches(&diagonal_word);
         }
         count
     }
@@ -138,14 +111,14 @@ MXMXAXMASX";
     #[test]
     pub fn count_diagonal_up_left() {
         let expected = 5;
-        let result = part1::count_diagonal_up_left(INPUT);
+        let result = part1::count_diagonal(INPUT, false);
         assert_eq!(result, expected, "got{}, expected:{}", result, expected);
     }
 
     #[test]
-    pub fn count_diagonal_right() {
+    pub fn count_diagonal_up_right() {
         let expected = 5;
-        let result = part1::count_diagonal_up_right(INPUT);
+        let result = part1::count_diagonal(INPUT, true);
         assert_eq!(result, expected, "got{}, expected:{}", result, expected);
     }
 
