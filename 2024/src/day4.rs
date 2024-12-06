@@ -10,51 +10,36 @@ pub mod part1 {
     }
 
     pub fn get_counts(puzzle: &str) -> i32 {
-        count_horizontal(&puzzle)
-            + count_vertical(&puzzle)
-            + count_diagonal_left(&puzzle)
-            + count_diagonal_right(&puzzle)
+        let horizontal: i32 = puzzle.lines().map(|line| count_matches(line)).sum();
+        horizontal
+            + count_vertical(puzzle)
+            + count_diagonal_up_left(puzzle)
+            + count_diagonal_up_right(puzzle)
     }
 
-    pub fn count_vertical(puzzle: &str) -> i32 {
-        let lines: Vec<&str> = puzzle.lines().collect();
-
+    pub fn count_diagonal_up_left(puzzle: &str) -> i32 {
+        let char_matrix: Vec<Vec<char>> =
+            puzzle.lines().map(|line| line.chars().collect()).collect();
         let mut count = 0;
-        for col in 0..lines.len() {
-            let mut vertical_word = String::new();
-            for line in &lines {
-                vertical_word.push(line.chars().nth(col).unwrap());
-            }
-            count += vertical_word.match_indices("XMAS").count() as i32
-                + vertical_word.matches("SAMX").count() as i32;
-        }
-        count
-    }
 
-    pub fn count_diagonal_left(puzzle: &str) -> i32 {
-        let lines: Vec<&str> = puzzle.lines().collect();
-
-        let mut count = 0;
         let mut row = 0;
-        let mut col = lines.len() - 1;
-        while row < lines.len() - 1 || col > 0 {
+        let mut col = char_matrix.len() - 1;
+        loop {
             let mut diagonal_word = String::new();
-            let mut curr_col = col;
-            let mut curr_row = row;
+            let (mut curr_col, mut curr_row) = (col, row);
             loop {
-                println!("left coords row:{}, col:{}", curr_row, curr_col);
-                diagonal_word.push(lines[curr_row].chars().nth(curr_col).unwrap());
-                if curr_row == 0 || curr_col == 0 {
+                diagonal_word.push(char_matrix[curr_row][curr_col]);
+                if curr_col == 0 || curr_row == 0 {
                     break;
-                } else {
-                    curr_row -= 1;
-                    curr_col -= 1;
                 }
+                curr_row -= 1;
+                curr_col -= 1;
             }
-            println!("next");
-            count += diagonal_word.match_indices("XMAS").count() as i32
-                + diagonal_word.matches("SAMX").count() as i32;
-            if row < lines.len() - 1 {
+            count += count_matches(&diagonal_word);
+            if row == char_matrix.len() - 1 && col == 0 {
+                break;
+            }
+            if row < char_matrix.len() - 1 {
                 row += 1;
             } else {
                 col -= 1;
@@ -63,47 +48,53 @@ pub mod part1 {
         count
     }
 
-    pub fn count_diagonal_right(puzzle: &str) -> i32 {
-        let lines: Vec<&str> = puzzle.lines().collect();
-
+    pub fn count_diagonal_up_right(puzzle: &str) -> i32 {
+        let char_matrix: Vec<Vec<char>> =
+            puzzle.lines().map(|line| line.chars().collect()).collect();
         let mut count = 0;
+
         let mut row = 0;
         let mut col = 0;
-        while row < lines.len() - 1 || col < lines.len() {
+        while row < char_matrix.len() - 1 || col < char_matrix.len() {
             let mut diagonal_word = String::new();
-            let mut curr_col = col;
-            let mut curr_row = row;
+            let (mut curr_col, mut curr_row) = (col, row);
             loop {
-                println!("right coords row:{}, col:{}", curr_row, curr_col);
-                diagonal_word.push(lines[curr_row].chars().nth(curr_col).unwrap());
-                if curr_row == 0 || curr_col == lines.len() - 1 {
+                diagonal_word.push(char_matrix[curr_row][curr_col]);
+                if curr_row == 0 || curr_col == char_matrix.len() - 1 {
                     break;
-                } else {
-                    curr_row -= 1;
-                    curr_col += 1;
                 }
+                curr_row -= 1;
+                curr_col += 1;
             }
-            println!("next");
-            count += diagonal_word.match_indices("XMAS").count() as i32
-                + diagonal_word.matches("SAMX").count() as i32;
-            if row < lines.len() - 1 {
+            if row < char_matrix.len() - 1 {
                 row += 1;
             } else {
                 col += 1;
             }
+            count += count_matches(&diagonal_word);
         }
         count
     }
 
-    pub fn count_horizontal(puzzle: &str) -> i32 {
+    pub fn count_matches(line: &str) -> i32 {
+        line.matches("XMAS").count() as i32 + line.matches("SAMX").count() as i32
+    }
+
+    pub fn count_vertical(puzzle: &str) -> i32 {
         puzzle
             .lines()
             .into_iter()
-            .map(|line| {
-                let count =
-                    line.matches("XMAS").count() as i32 + line.matches("SAMX").count() as i32;
-                count
-            })
+            .fold(
+                vec![String::from(""); puzzle.lines().count()],
+                |mut vertical_lines, line| {
+                    line.chars()
+                        .enumerate()
+                        .for_each(|(i, char)| vertical_lines[i].push(char));
+                    vertical_lines
+                },
+            )
+            .iter()
+            .map(|vert| count_matches(vert.as_str()))
             .sum()
     }
 }
@@ -116,6 +107,7 @@ pub mod part2 {
 
 #[cfg(test)]
 mod tests {
+
     use super::part1;
 
     const INPUT: &str = "\
@@ -133,7 +125,7 @@ MXMXAXMASX";
     #[test]
     pub fn count_horizontal() {
         let expected = 5;
-        let result = part1::count_horizontal(INPUT);
+        let result: i32 = INPUT.lines().map(|line| part1::count_matches(line)).sum();
         assert_eq!(result, expected, "got{}, expected:{}", result, expected);
     }
     #[test]
@@ -144,16 +136,16 @@ MXMXAXMASX";
     }
 
     #[test]
-    pub fn count_diagonal_left() {
+    pub fn count_diagonal_up_left() {
         let expected = 5;
-        let result = part1::count_diagonal_left(INPUT);
+        let result = part1::count_diagonal_up_left(INPUT);
         assert_eq!(result, expected, "got{}, expected:{}", result, expected);
     }
 
     #[test]
     pub fn count_diagonal_right() {
         let expected = 5;
-        let result = part1::count_diagonal_right(INPUT);
+        let result = part1::count_diagonal_up_right(INPUT);
         assert_eq!(result, expected, "got{}, expected:{}", result, expected);
     }
 
