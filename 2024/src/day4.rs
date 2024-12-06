@@ -4,7 +4,6 @@ pub mod part1 {
     pub fn run(file_path: &str) {
         println!("running day 4 part 1");
         let input = fs::read_to_string(file_path).unwrap();
-
         let total = get_counts(&input);
         println!("total :{}", total);
     }
@@ -15,6 +14,28 @@ pub mod part1 {
             + count_vertical(puzzle)
             + count_diagonal(puzzle, true)
             + count_diagonal(puzzle, false)
+    }
+
+    pub fn count_matches(line: &str) -> i32 {
+        line.matches("XMAS").count() as i32 + line.matches("SAMX").count() as i32
+    }
+
+    pub fn count_vertical(puzzle: &str) -> i32 {
+        puzzle
+            .lines()
+            .into_iter()
+            .fold(
+                vec![String::from(""); puzzle.lines().count()],
+                |mut vertical_lines, line| {
+                    line.chars()
+                        .enumerate()
+                        .for_each(|(i, char)| vertical_lines[i].push(char));
+                    vertical_lines
+                },
+            )
+            .iter()
+            .map(|vert| count_matches(vert.as_str()))
+            .sum()
     }
 
     pub fn count_diagonal(puzzle: &str, reverse: bool) -> i32 {
@@ -48,33 +69,61 @@ pub mod part1 {
         }
         count
     }
-
-    pub fn count_matches(line: &str) -> i32 {
-        line.matches("XMAS").count() as i32 + line.matches("SAMX").count() as i32
-    }
-
-    pub fn count_vertical(puzzle: &str) -> i32 {
-        puzzle
-            .lines()
-            .into_iter()
-            .fold(
-                vec![String::from(""); puzzle.lines().count()],
-                |mut vertical_lines, line| {
-                    line.chars()
-                        .enumerate()
-                        .for_each(|(i, char)| vertical_lines[i].push(char));
-                    vertical_lines
-                },
-            )
-            .iter()
-            .map(|vert| count_matches(vert.as_str()))
-            .sum()
-    }
 }
 
 pub mod part2 {
-    pub fn run(_file_path: &str) {
+    use std::fs;
+
+    pub fn run(file_path: &str) {
         println!("running day 4 part 2");
+        let input = fs::read_to_string(file_path).unwrap();
+        let count = count_x_mas(&input);
+        println!("count: {}", count);
+    }
+
+    pub fn count_x_mas(puzzle: &str) -> i32 {
+        let char_matrix: Vec<Vec<char>> =
+            puzzle.lines().map(|line| line.chars().collect()).collect();
+        let mut count = 0;
+        for i in 1..char_matrix.len() - 1 {
+            for j in 1..char_matrix.len() - 1 {
+                if char_matrix[i][j] == 'A' {
+                    let tl = char_matrix[i + 1][j - 1].to_string();
+                    let tr = char_matrix[i + 1][j + 1].to_string();
+                    let br = char_matrix[i - 1][j - 1].to_string();
+                    let bl = char_matrix[i - 1][j + 1].to_string();
+                    let mut v = vec![tl, tr, br, bl];
+                    v.sort();
+                    if v == vec!["M", "M", "S", "S"] {
+                        count += 1;
+                    }
+                }
+            }
+        }
+        count
+    }
+    #[cfg(test)]
+
+    mod tests {
+        use super::count_x_mas;
+
+        #[test]
+        pub fn test_file() {
+            let input = "\
+MMMSXXMASM
+MSAMXMSMSA
+AMXSXMAAMM
+MSAMASMSMX
+XMASAMXAMM
+XXAMMXXAMA
+SMSMSASXSS
+SAXAMASAAA
+MAMMMXMMMM
+MXMXAXMASX";
+            let expected = 9;
+            let result = count_x_mas(input);
+            assert_eq!(result, expected, "got:{}, expected: {}", result, expected);
+        }
     }
 }
 
