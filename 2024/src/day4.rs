@@ -39,18 +39,17 @@ pub mod part1 {
     }
 
     pub fn count_diagonal(puzzle: &str, reverse: bool) -> i32 {
-        let char_matrix: Vec<Vec<char>> =
-            puzzle.lines().map(|line| line.chars().collect()).collect();
+        let matrix: Vec<Vec<char>> = puzzle.lines().map(|line| line.chars().collect()).collect();
         let mut count = 0;
 
         let mut row = 0;
-        let mut col = if reverse { char_matrix.len() - 1 } else { 0 };
-        let col_end = if reverse { 0 } else { char_matrix.len() - 1 };
+        let mut col = if reverse { matrix.len() - 1 } else { 0 };
+        let col_end = if reverse { 0 } else { matrix.len() - 1 };
         loop {
             let mut diagonal_word = String::new();
             let (mut char_col, mut char_row) = (col, row);
             loop {
-                diagonal_word.push(char_matrix[char_row][char_col]);
+                diagonal_word.push(matrix[char_row][char_col]);
                 if char_col == col_end || char_row == 0 {
                     break;
                 }
@@ -58,10 +57,10 @@ pub mod part1 {
                 char_col = if reverse { char_col - 1 } else { char_col + 1 };
             }
             count += count_matches(&diagonal_word);
-            if row == char_matrix.len() - 1 && col == col_end {
+            if row == matrix.len() - 1 && col == col_end {
                 break;
             }
-            if row < char_matrix.len() - 1 {
+            if row < matrix.len() - 1 {
                 row += 1;
             } else {
                 col = if reverse { col - 1 } else { col + 1 };
@@ -74,27 +73,25 @@ pub mod part1 {
 pub mod part2 {
     use std::fs;
 
-    pub fn run(file_path: &str) {
+    pub fn run(file_path: &str) -> i32 {
         println!("running day 4 part 2");
         let input = fs::read_to_string(file_path).unwrap();
         let count = count_x_mas(&input);
         println!("count: {}", count);
+        count
     }
 
     pub fn count_x_mas(puzzle: &str) -> i32 {
-        let char_matrix: Vec<Vec<char>> =
-            puzzle.lines().map(|line| line.chars().collect()).collect();
+        let matrix: Vec<Vec<char>> = puzzle.lines().map(|line| line.chars().collect()).collect();
         let mut count = 0;
-        for i in 1..char_matrix.len() - 1 {
-            for j in 1..char_matrix.len() - 1 {
-                if char_matrix[i][j] == 'A' {
-                    let tl = char_matrix[i + 1][j - 1].to_string();
-                    let tr = char_matrix[i + 1][j + 1].to_string();
-                    let br = char_matrix[i - 1][j - 1].to_string();
-                    let bl = char_matrix[i - 1][j + 1].to_string();
-                    let mut v = vec![tl, tr, br, bl];
-                    v.sort();
-                    if v == vec!["M", "M", "S", "S"] {
+        for i in 1..matrix.len() - 1 {
+            for j in 1..matrix.len() - 1 {
+                if matrix[i][j] == 'A' {
+                    let mut cross_one = vec![matrix[i + 1][j - 1], matrix[i - 1][j + 1]];
+                    let mut cross_two = vec![matrix[i + 1][j + 1], matrix[i - 1][j - 1]];
+                    cross_one.sort();
+                    cross_two.sort();
+                    if cross_one == cross_two && cross_two == vec!['M', 'S'] {
                         count += 1;
                     }
                 }
@@ -102,35 +99,12 @@ pub mod part2 {
         }
         count
     }
-    #[cfg(test)]
-
-    mod tests {
-        use super::count_x_mas;
-
-        #[test]
-        pub fn test_file() {
-            let input = "\
-MMMSXXMASM
-MSAMXMSMSA
-AMXSXMAAMM
-MSAMASMSMX
-XMASAMXAMM
-XXAMMXXAMA
-SMSMSASXSS
-SAXAMASAAA
-MAMMMXMMMM
-MXMXAXMASX";
-            let expected = 9;
-            let result = count_x_mas(input);
-            assert_eq!(result, expected, "got:{}, expected: {}", result, expected);
-        }
-    }
 }
 
 #[cfg(test)]
 mod tests {
 
-    use super::part1;
+    use super::{part1, part2};
 
     const INPUT: &str = "\
 MMMSXXMASM
@@ -176,5 +150,29 @@ MXMXAXMASX";
         let expected = 18;
         let result = part1::get_counts(INPUT);
         assert_eq!(result, expected, "got{}, expected:{}", result, expected);
+    }
+    #[test]
+    pub fn test_file() {
+        let input = "\
+MMMSXXMASM
+MSAMXMSMSA
+AMXSXMAAMM
+MSAMASMSMX
+XMASAMXAMM
+XXAMMXXAMA
+SMSMSASXSS
+SAXAMASAAA
+MAMMMXMMMM
+MXMXAXMASX";
+        let expected = 9;
+        let result = part2::count_x_mas(input);
+        assert_eq!(result, expected, "got:{}, expected: {}", result, expected);
+    }
+
+    #[test]
+    pub fn test_run() {
+        let expected = 1875;
+        let result = part2::run("./day4.txt");
+        assert_eq!(expected, result);
     }
 }
