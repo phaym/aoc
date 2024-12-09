@@ -58,7 +58,7 @@ pub mod part1 {
 }
 
 pub mod part2 {
-    use std::{collections::HashMap, fs};
+    use std::{cmp::Ordering, fs};
 
     use crate::day5::{is_update_valid, parse_puzzle};
 
@@ -70,7 +70,15 @@ pub mod part2 {
             .iter_mut()
             .filter(|update| !is_update_valid(&rules, update))
             .map(|update| {
-                sort_by_rules(&rules, update);
+                update.sort_by(|a, b| {
+                    if rules.get(&a).map_or(false, |rule| rule.contains(b)) {
+                        Ordering::Less
+                    } else if rules.get(&b).map_or(false, |rule| rule.contains(a)) {
+                        Ordering::Greater
+                    } else {
+                        Ordering::Equal
+                    }
+                });
                 update[update.len() / 2]
             })
             .sum();
@@ -78,31 +86,10 @@ pub mod part2 {
         println!("count is {}", count);
         return count;
     }
-
-    pub fn sort_by_rules(rules: &HashMap<i32, Vec<i32>>, updates: &mut Vec<i32>) {
-        let mut swap_performed = true;
-        while swap_performed {
-            swap_performed = false;
-            let mut seen = HashMap::new();
-
-            for i in 0..updates.len() {
-                let entry = updates[i];
-
-                if let Some(must_be_after) = rules.get(&entry) {
-                    if let Some(&j) = must_be_after.iter().find_map(|value| seen.get(value)) {
-                        updates.swap(i, j);
-                        swap_performed = true;
-                    }
-                }
-                seen.entry(entry).or_insert(i);
-            }
-        }
-    }
 }
 
 #[cfg(test)]
 mod tests {
-    use std::collections::HashMap;
 
     use super::{parse_puzzle, part1, part2};
 
@@ -123,30 +110,6 @@ mod tests {
         assert_eq!(count, 143, "got {} expected {}", count, 143);
         let count = part1::run("./day5.txt");
         assert_eq!(count, 4766, "got {} expected {}", count, 4766);
-    }
-
-    #[test]
-    pub fn test_sorting() {
-        let tests = vec![
-            (
-                vec![(97, vec![75])],
-                vec![75, 97, 47, 61, 53],
-                vec![97, 75, 47, 61, 53],
-            ),
-            (
-                vec![(2, vec![5, 3]), (3, vec![5])],
-                vec![5, 3, 2],
-                vec![2, 3, 5],
-            ),
-        ];
-        for (hash, mut updates, expected) in tests {
-            let mut rules = HashMap::new();
-            for (before, after) in hash {
-                rules.insert(before, after);
-            }
-            part2::sort_by_rules(&rules, &mut updates);
-            assert_eq!(updates, expected);
-        }
     }
 
     #[test]
