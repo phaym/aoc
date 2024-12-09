@@ -4,56 +4,52 @@ pub mod part1 {
 
     pub fn run(file_path: &str) -> i32 {
         let puzzle = fs::read_to_string(file_path).unwrap();
-        let (rules, lines) = parse_puzzle(&puzzle);
-        println!("got puzzle {:?} {:?}", rules, lines);
-        let mut count = 0;
+        let (rules, updates_list) = parse_puzzle(&puzzle);
 
-        'outer: for line in &lines {
-            let mut prev_updates = HashMap::new();
-            for update in line {
-                if let Some(rules) = rules.get(&update) {
-                    for rule in rules {
-                        if let Some(_) = prev_updates.get(&rule) {
-                            continue 'outer;
-                        }
-                    }
-                }
-                prev_updates.entry(update).or_insert(true);
-            }
-            count += line[line.len() / 2];
-            println!("no rules broken, count now {}", count);
-        }
+        let count = updates_list
+            .iter()
+            .filter(|updates| is_update_valid(&rules, updates))
+            .map(|updates| updates[updates.len() / 2])
+            .sum();
+
         println!("count is {}", count);
         return count;
     }
 
-    #[derive(Debug)]
-    pub struct Rule {
-        pub left: i32,
-        pub right: i32,
+    pub fn is_update_valid(rules: &HashMap<i32, Vec<i32>>, updates: &Vec<i32>) -> bool {
+        let mut seen = HashMap::new();
+        for entry in updates {
+            if let Some(must_be_after) = rules.get(entry) {
+                if must_be_after.iter().any(|value| seen.contains_key(value)) {
+                    return false;
+                }
+            }
+            seen.entry(entry).or_insert(true);
+        }
+        true
     }
 
     pub fn parse_puzzle(puzzle: &str) -> (HashMap<i32, Vec<i32>>, Vec<Vec<i32>>) {
-        let mut rules: HashMap<i32, Vec<i32>> = HashMap::new();
-        let mut updates = Vec::new();
-        let mut is_input_section = false;
-        for line in puzzle.lines() {
-            if !is_input_section {
-                if line.is_empty() {
-                    is_input_section = true;
-                } else {
-                    let rule: Vec<i32> =
-                        line.split("|").map(|s| s.parse::<i32>().unwrap()).collect();
+        let sections: Vec<&str> = puzzle.split("\n\n").collect();
+        (
+            sections[0]
+                .lines()
+                .map(|line| line.split("|").map(|s| s.parse::<i32>().unwrap()).collect())
+                .fold(HashMap::new(), |mut rules, nums: Vec<i32>| {
                     rules
-                        .entry(rule[0])
-                        .and_modify(|rules| rules.push(rule[1]))
-                        .or_insert(vec![rule[1]]);
-                }
-            } else {
-                updates.push(line.split(",").map(|s| s.parse::<i32>().unwrap()).collect());
-            }
-        }
-        (rules, updates)
+                        .entry(nums[0])
+                        .and_modify(|rules| rules.push(nums[1]))
+                        .or_insert(vec![nums[1]]);
+                    rules
+                }),
+            sections[1]
+                .lines()
+                .map(|line| line.split(",").map(|s| s.parse::<i32>().unwrap()).collect())
+                .fold(Vec::new(), |mut updates, nums: Vec<i32>| {
+                    updates.push(nums);
+                    updates
+                }),
+        )
     }
 }
 
