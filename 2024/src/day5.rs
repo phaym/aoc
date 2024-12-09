@@ -58,32 +58,50 @@ pub mod part1 {
 }
 
 pub mod part2 {
-    use std::fs;
+    use std::{collections::HashMap, fs};
 
     use crate::day5::{is_update_valid, parse_puzzle};
 
     pub fn run(file_path: &str) -> i32 {
         let puzzle = fs::read_to_string(file_path).unwrap();
-        let (rules, updates) = parse_puzzle(&puzzle);
+        let (rules, mut updates) = parse_puzzle(&puzzle);
 
         let count = updates
-            .iter()
+            .iter_mut()
             .filter(|updates| !is_update_valid(&rules, updates))
-            .map(|updates| get_middle_after_fix(updates))
+            .map(|updates| sort_by_rules(&rules, updates))
+            .map(|updates| updates[updates.len() / 2])
             .sum();
 
         println!("count is {}", count);
         return count;
     }
 
-    pub fn get_middle_after_fix(updates: &Vec<i32>) -> i32 {
-        updates[updates.len() / 2]
+    pub fn sort_by_rules(rules: &HashMap<i32, Vec<i32>>, updates: &mut Vec<i32>) -> Vec<i32> {
+        let mut swap_performed = true;
+        while swap_performed {
+            swap_performed = false;
+            let mut seen = HashMap::new();
+            for i in 0..updates.len() {
+                let entry = updates[i];
+                if let Some(must_be_after) = rules.get(&entry) {
+                    if let Some(&j) = must_be_after.iter().find_map(|value| seen.get(value)) {
+                        updates.swap(i, j);
+                        swap_performed = true;
+                    }
+                }
+                seen.entry(entry).or_insert(i);
+            }
+        }
+        updates.to_vec()
     }
 }
 
 #[cfg(test)]
 mod tests {
-    use super::{parse_puzzle, part1};
+    use std::collections::HashMap;
+
+    use super::{parse_puzzle, part1, part2};
 
     #[test]
     pub fn test_parse_puzzle() {
@@ -102,5 +120,35 @@ mod tests {
         assert_eq!(count, 143, "got {} expected {}", count, 143);
         let count = part1::run("./day5.txt");
         assert_eq!(count, 4766, "got {} expected {}", count, 4766);
+    }
+
+    #[test]
+    pub fn test_sorting() {
+        let tests = vec![
+            (
+                vec![(97, vec![75])],
+                vec![75, 97, 47, 61, 53],
+                vec![97, 75, 47, 61, 53],
+            ),
+            (
+                vec![(2, vec![5, 3]), (3, vec![5])],
+                vec![5, 3, 2],
+                vec![2, 3, 5],
+            ),
+        ];
+        for (hash, mut updates, expected) in tests {
+            let mut rules = HashMap::new();
+            for (before, after) in hash {
+                rules.insert(before, after);
+            }
+            let new_list = part2::sort_by_rules(&rules, &mut updates);
+            assert_eq!(new_list, expected);
+        }
+    }
+
+    #[test]
+    pub fn test_file2() {
+        let count = part2::run("./day5.txt");
+        assert_eq!(count, 6257, "got {} expected {}", count, 6257);
     }
 }
