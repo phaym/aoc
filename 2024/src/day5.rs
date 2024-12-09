@@ -68,22 +68,26 @@ pub mod part2 {
 
         let count = updates
             .iter_mut()
-            .filter(|updates| !is_update_valid(&rules, updates))
-            .map(|updates| sort_by_rules(&rules, updates))
-            .map(|updates| updates[updates.len() / 2])
+            .filter(|update| !is_update_valid(&rules, update))
+            .map(|update| {
+                sort_by_rules(&rules, update);
+                update[update.len() / 2]
+            })
             .sum();
 
         println!("count is {}", count);
         return count;
     }
 
-    pub fn sort_by_rules(rules: &HashMap<i32, Vec<i32>>, updates: &mut Vec<i32>) -> Vec<i32> {
+    pub fn sort_by_rules(rules: &HashMap<i32, Vec<i32>>, updates: &mut Vec<i32>) {
         let mut swap_performed = true;
         while swap_performed {
             swap_performed = false;
             let mut seen = HashMap::new();
+
             for i in 0..updates.len() {
                 let entry = updates[i];
+
                 if let Some(must_be_after) = rules.get(&entry) {
                     if let Some(&j) = must_be_after.iter().find_map(|value| seen.get(value)) {
                         updates.swap(i, j);
@@ -93,7 +97,6 @@ pub mod part2 {
                 seen.entry(entry).or_insert(i);
             }
         }
-        updates.to_vec()
     }
 }
 
@@ -141,8 +144,8 @@ mod tests {
             for (before, after) in hash {
                 rules.insert(before, after);
             }
-            let new_list = part2::sort_by_rules(&rules, &mut updates);
-            assert_eq!(new_list, expected);
+            part2::sort_by_rules(&rules, &mut updates);
+            assert_eq!(updates, expected);
         }
     }
 
