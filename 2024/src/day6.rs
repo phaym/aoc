@@ -8,15 +8,24 @@ pub mod part1 {
         count
     }
 
-    pub fn parse_matrix(map: &str) -> (Vec<Vec<char>>, (isize, isize)) {
-        let mut start = (0, 0);
+    #[derive(Debug)]
+    pub struct Coord {
+        row: isize,
+        col: isize,
+    }
+
+    pub fn parse_matrix(map: &str) -> (Vec<Vec<char>>, Coord) {
+        let mut start = Coord { row: 0, col: 0 };
         let matrix = map
             .lines()
             .into_iter()
             .enumerate()
             .map(|(i, line)| {
                 if let Some(j) = line.find('^') {
-                    start = (i as isize, j as isize);
+                    start = Coord {
+                        row: i as isize,
+                        col: j as isize,
+                    };
                 };
                 line.chars().collect()
             })
@@ -25,37 +34,39 @@ pub mod part1 {
     }
 
     pub fn count_moves(map: &str) -> i32 {
-        let (mut matrix, mut pos) = parse_matrix(map);
+        let (mut matrix, mut coord) = parse_matrix(map);
         let max = matrix.len() as isize;
 
         let mut count = 0;
-        let dirs = vec![(-1, 0), (0, 1), (1, 0), (0, -1)];
-        let mut dir_idx = 0;
-        while pos.0 < max && pos.0 >= 0 && pos.1 < max && pos.1 >= 0 {
-            if matrix[pos.0 as usize][pos.1 as usize] != 'X' {
+        let deltas: [(isize, isize); 4] = [(-1, 0), (0, 1), (1, 0), (0, -1)];
+        let mut delta_idx = 0;
+        while coord.row < max && coord.row >= 0 && coord.col < max && coord.col >= 0 {
+            if matrix[coord.row as usize][coord.col as usize] != 'X' {
                 count += 1;
             }
-            matrix[pos.0 as usize][pos.1 as usize] = 'X';
+            matrix[coord.row as usize][coord.col as usize] = 'X';
 
-            let mut next = (pos.0 + dirs[dir_idx].0, pos.1 + dirs[dir_idx].1);
-            if matrix
-                .get(next.0 as usize)
-                .and_then(|row| row.get(next.1 as usize))
-                .copied()
-                .unwrap_or('a')
-                == '#'
-            {
-                dir_idx += 1;
-                if dir_idx >= dirs.len() {
-                    dir_idx = 0;
+            let mut delta = deltas[delta_idx];
+            let (next_row, next_col) = (coord.row + delta.0, coord.col + delta.1);
+            if let Some('#') = try_get_char(&matrix, next_row, next_col) {
+                delta_idx += 1;
+                if delta_idx >= deltas.len() {
+                    delta_idx = 0;
                 }
-                next = (pos.0 + dirs[dir_idx].0, pos.1 + dirs[dir_idx].1);
+                delta = deltas[delta_idx];
             }
 
-            pos.0 = next.0;
-            pos.1 = next.1;
+            coord.row += delta.0;
+            coord.col += delta.1;
         }
         count
+    }
+
+    pub fn try_get_char(matrix: &Vec<Vec<char>>, row: isize, col: isize) -> Option<char> {
+        matrix
+            .get(row as usize)
+            .and_then(|row| row.get(col as usize))
+            .copied()
     }
 }
 
