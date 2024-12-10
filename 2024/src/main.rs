@@ -3,6 +3,7 @@ pub mod day2;
 pub mod day3;
 pub mod day4;
 pub mod day5;
+pub mod day6;
 
 fn main() {
     // day1::part1::run("./day1.txt");
@@ -17,6 +18,8 @@ fn main() {
     // day4::part1::run("./day4.txt");
     // day4::part2::run("./day4.txt");
 
-    day5::part1::run("./day5.txt");
-    day5::part2::run("./day5.txt");
+    // day5::part1::run("./day5.txt");
+    // day5::part2::run("./day5.txt");
+
+    day6::part1::run("./day6.txt");
 }
