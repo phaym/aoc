@@ -60,24 +60,31 @@ pub mod part2 {
         puzzle
             .lines()
             .map(|line| parse_line(line))
-            .map(|(total, nums)| if is_valid(total, nums, 0) { total } else { 0 })
+            .map(|(total, nums)| {
+                if is_valid(total, &nums, 0, 0) {
+                    total
+                } else {
+                    0
+                }
+            })
             .sum()
     }
 
-    pub fn is_valid(total: i64, nums: Vec<i64>, current: i64) -> bool {
-        if nums.len() == 0 {
+    pub fn is_valid(total: i64, nums: &Vec<i64>, index: usize, current: i64) -> bool {
+        if index == nums.len() {
             return if total == current { true } else { false };
         }
 
-        let concat = (current.to_string() + &nums[0].to_string())
+        let concat = (current.to_string() + &nums[index].to_string())
             .parse::<i64>()
             .unwrap();
-        let sum_total = is_valid(total, nums[1..nums.len()].to_vec(), current + nums[0]);
-        let concat_total = is_valid(total, nums[1..nums.len()].to_vec(), concat);
+        let sum_total = is_valid(total, nums, index + 1, current + nums[index]);
+        let concat_total = is_valid(total, nums, index + 1, concat);
         let multi_total = is_valid(
             total,
-            nums[1..nums.len()].to_vec(),
-            if current == 0 { 1 } else { current } * nums[0],
+            nums,
+            index + 1,
+            if current == 0 { 1 } else { current } * nums[index],
         );
         return sum_total || multi_total || concat_total;
     }
