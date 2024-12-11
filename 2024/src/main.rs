@@ -25,4 +25,5 @@ fn main() {
     // day6::part1::run("./day6.txt");
     // day6::part2::run("./day6.txt");
     day7::part1::run("./day7.txt");
+    day7::part2::run("./day7.txt");
 }

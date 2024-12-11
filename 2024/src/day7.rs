@@ -1,5 +1,18 @@
+pub fn parse_line(line: &str) -> (i64, Vec<i64>) {
+    let segments: Vec<&str> = line.split(':').collect();
+    let total = segments[0].parse::<i64>().unwrap();
+    let nums = segments[1]
+        .trim()
+        .split(' ')
+        .map(|c| c.parse::<i64>().unwrap())
+        .collect();
+    (total, nums)
+}
+
 pub mod part1 {
     use std::fs;
+
+    use super::parse_line;
 
     pub fn run(file_path: &str) -> i64 {
         let puzzle = fs::read_to_string(file_path).unwrap();
@@ -16,19 +29,7 @@ pub mod part1 {
             .sum()
     }
 
-    pub fn parse_line(line: &str) -> (i64, Vec<i64>) {
-        let segments: Vec<&str> = line.split(':').collect();
-        let total = segments[0].parse::<i64>().unwrap();
-        let nums = segments[1]
-            .trim()
-            .split(' ')
-            .map(|c| c.parse::<i64>().unwrap())
-            .collect();
-        (total, nums)
-    }
-
     pub fn is_valid(total: i64, nums: Vec<i64>, current: i64) -> bool {
-        // println!("total: {}, current{}, nums: {:?} ", total, current, nums);
         if nums.len() == 0 {
             return if total == current { true } else { false };
         }
@@ -40,6 +41,45 @@ pub mod part1 {
             if current == 0 { 1 } else { current } * nums[0],
         );
         return sum_total || multi_total;
+    }
+}
+
+pub mod part2 {
+    use std::fs;
+
+    use super::parse_line;
+
+    pub fn run(file_path: &str) -> i64 {
+        let puzzle = fs::read_to_string(file_path).unwrap();
+        let total = get_total(puzzle);
+        println!("got total: {}", total);
+        total
+    }
+
+    pub fn get_total(puzzle: String) -> i64 {
+        puzzle
+            .lines()
+            .map(|line| parse_line(line))
+            .map(|(total, nums)| if is_valid(total, nums, 0) { total } else { 0 })
+            .sum()
+    }
+
+    pub fn is_valid(total: i64, nums: Vec<i64>, current: i64) -> bool {
+        if nums.len() == 0 {
+            return if total == current { true } else { false };
+        }
+
+        let concat = (current.to_string() + &nums[0].to_string())
+            .parse::<i64>()
+            .unwrap();
+        let sum_total = is_valid(total, nums[1..nums.len()].to_vec(), current + nums[0]);
+        let concat_total = is_valid(total, nums[1..nums.len()].to_vec(), concat);
+        let multi_total = is_valid(
+            total,
+            nums[1..nums.len()].to_vec(),
+            if current == 0 { 1 } else { current } * nums[0],
+        );
+        return sum_total || multi_total || concat_total;
     }
 }
 
