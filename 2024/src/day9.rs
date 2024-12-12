@@ -1,9 +1,15 @@
 pub mod part1 {
     use std::fs;
 
+    #[derive(Debug)]
+    pub enum FileBlock {
+        FileId(u32),
+        Space,
+    }
+
     pub fn run(file_path: &str) -> usize {
-        let disk = fs::read_to_string(file_path).unwrap();
-        let checksum = get_checksum(disk);
+        let puzzle = fs::read_to_string(file_path).unwrap().trim().to_string();
+        let checksum = get_checksum(puzzle);
         println!("checksum is: {}", checksum);
         checksum
     }
@@ -14,25 +20,17 @@ pub mod part1 {
         checksum(unzipped)
     }
 
-    #[derive(Debug)]
-    pub enum FileBlock {
-        FileId(i32),
-        Space,
-    }
-
-    pub fn unzip(disk: String) -> Vec<FileBlock> {
+    pub fn unzip(file_zipped: String) -> Vec<FileBlock> {
         let mut unzipped = Vec::new();
 
         let mut file_id = 0;
-        let mut chars = disk.chars();
-        while let Some(char) = chars.next() {
-            if let Some(size) = char.to_digit(10) {
-                for _ in 0..size {
-                    unzipped.push(FileBlock::FileId(file_id));
-                }
+        let mut digits = file_zipped.chars().map(|c| c.to_digit(10).unwrap());
+        while let Some(file_size) = digits.next() {
+            for _ in 0..file_size {
+                unzipped.push(FileBlock::FileId(file_id));
             }
-            if let Some(blank) = chars.next().unwrap_or('0').to_digit(10) {
-                for _ in 0..blank {
+            if let Some(space_size) = digits.next() {
+                for _ in 0..space_size {
                     unzipped.push(FileBlock::Space);
                 }
             }
@@ -41,21 +39,21 @@ pub mod part1 {
         unzipped
     }
 
-    pub fn compact(unzipped: &mut Vec<FileBlock>) {
-        let mut right = unzipped.len() - 1;
+    pub fn compact(file_blocks: &mut Vec<FileBlock>) {
+        let mut right = file_blocks.len() - 1;
         let mut left = 0;
         while left < right {
             if let (Some(FileBlock::Space), Some(FileBlock::FileId(_))) =
-                (unzipped.get(left), unzipped.get(right))
+                (file_blocks.get(left), file_blocks.get(right))
             {
-                unzipped.swap(left, right);
+                file_blocks.swap(left, right);
                 left += 1;
                 right -= 1;
             }
-            if let Some(FileBlock::FileId(_)) = unzipped.get(left) {
+            if let Some(FileBlock::FileId(_)) = file_blocks.get(left) {
                 left += 1;
             }
-            if let Some(FileBlock::Space) = unzipped.get(right) {
+            if let Some(FileBlock::Space) = file_blocks.get(right) {
                 right -= 1;
             }
         }
@@ -76,22 +74,9 @@ pub mod part1 {
 pub mod part2 {
     use std::{fmt, fs};
 
-    pub fn run(file_path: &str) -> usize {
-        let disk = fs::read_to_string(file_path).unwrap();
-        let checksum = get_checksum(disk);
-        println!("checksum part2 is: {}", checksum);
-        checksum
-    }
-
-    pub fn get_checksum(puzzle: String) -> usize {
-        let (mut unzipped, max_file_id) = unzip(puzzle);
-        compact(&mut unzipped, max_file_id);
-        checksum(unzipped)
-    }
-
     #[derive(Debug)]
     pub struct File {
-        id: i32,
+        id: u32,
         size: u32,
     }
 
@@ -114,58 +99,69 @@ pub mod part2 {
         }
     }
 
-    pub fn unzip(disk: String) -> (Vec<FileBlock>, i32) {
-        let mut unzipped = Vec::new();
-
-        let mut file_id = 0;
-        let mut chars = disk.chars();
-        while let Some(char) = chars.next() {
-            if let Some(size) = char.to_digit(10) {
-                unzipped.push(FileBlock::File(File { id: file_id, size }));
-            }
-            if let Some(blank) = chars.next().unwrap_or('0').to_digit(10) {
-                unzipped.push(FileBlock::Space(blank));
-            }
-            file_id += 1;
-        }
-
-        (unzipped, file_id - 1)
+    pub fn run(file_path: &str) -> usize {
+        let puzzle = fs::read_to_string(file_path).unwrap().trim().to_string();
+        let checksum = get_checksum(puzzle);
+        println!("checksum part2 is: {}", checksum);
+        checksum
     }
 
-    pub fn compact(file_blocks: &mut Vec<FileBlock>, max_file_id: i32) {
+    pub fn get_checksum(puzzle: String) -> usize {
+        let (mut unzipped, max_file_id) = unzip(puzzle);
+        compact(&mut unzipped, max_file_id);
+        checksum(unzipped)
+    }
+
+    pub fn unzip(file_zipped: String) -> (Vec<FileBlock>, u32) {
+        let mut unzipped = Vec::new();
+
+        let mut id = 0;
+        let mut digits = file_zipped.chars().map(|c| c.to_digit(10).unwrap());
+        while let Some(size) = digits.next() {
+            unzipped.push(FileBlock::File(File { id, size }));
+            if let Some(space_size) = digits.next() {
+                unzipped.push(FileBlock::Space(space_size));
+            }
+            id += 1;
+        }
+        (unzipped, id - 1)
+    }
+
+    pub fn find_space(
+        file_blocks: &Vec<FileBlock>,
+        size: u32,
+        max_index: usize,
+    ) -> Option<(usize, u32)> {
+        file_blocks
+            .iter()
+            .take(max_index)
+            .enumerate()
+            .find_map(|(i, block)| match block {
+                FileBlock::Space(space_size) if *space_size >= size => Some((i, *space_size)),
+                _ => None,
+            })
+    }
+
+    pub fn compact(file_blocks: &mut Vec<FileBlock>, max_file_id: u32) {
         let mut expected_file_id = max_file_id;
         for i in (0..file_blocks.len()).rev() {
             if let Some(FileBlock::File(file)) = file_blocks.get(i) {
-                if file.id != expected_file_id {
+                if expected_file_id != file.id {
                     continue;
                 }
-                // for i in 0..file_blocks.len() {
-                //     print!("{}", file_blocks[i]);
-                // }
-                // println!("\ni:{}", i);
-                if let Some((j, FileBlock::Space(space_size))) = file_blocks
-                    .iter()
-                    .take(i)
-                    .enumerate()
-                    .find(|(_, block)| match block {
-                        FileBlock::Space(space_size) if *space_size >= file.size => true,
-                        _ => false,
-                    })
-                {
-                    // println!(
-                    //     "found size:{} at j: {} for file_id:{}",
-                    //     *space_size, j, file.id
-                    // );
-                    if *space_size == file.size {
+                if let Some((j, space_size)) = find_space(file_blocks, file.size, i) {
+                    if space_size == file.size {
                         file_blocks.swap(i, j);
-                    } else if *space_size > file.size {
+                    } else if space_size > file.size {
                         let new_space = FileBlock::Space(space_size - file.size);
                         file_blocks[j] = FileBlock::Space(file.size);
                         file_blocks.swap(i, j);
                         file_blocks.insert(j + 1, new_space);
                     }
                 }
-                expected_file_id -= 1;
+                if expected_file_id > 0 {
+                    expected_file_id -= 1;
+                }
             }
         }
     }
@@ -210,5 +206,11 @@ pub mod tests {
     pub fn test_file_run_2() {
         let checksum = part2::get_checksum("2333133121414131402".to_string());
         assert_eq!(checksum, 2858);
+    }
+
+    #[test]
+    pub fn test_run_2() {
+        let result = part2::run("./day9.txt");
+        assert_eq!(result, 6286182965311);
     }
 }
