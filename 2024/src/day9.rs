@@ -1,5 +1,4 @@
 pub mod part1 {
-    use core::fmt;
     use std::fs;
 
     pub fn run(file_path: &str) -> usize {
