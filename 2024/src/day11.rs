@@ -1,29 +1,26 @@
 use std::{collections::HashMap, fs};
 
-pub fn count_stone_splits(stone: u64, blinks: u64, memo: &mut HashMap<(u64, u64), u64>) -> u64 {
-    if memo.contains_key(&(stone, blinks)) {
-        return *memo.get(&(stone, blinks)).unwrap();
+pub fn stone_count(stone: u64, blinks: u64, memo: &mut HashMap<(u64, u64), u64>) -> u64 {
+    if let Some(&result) = memo.get(&(stone, blinks)) {
+        return result;
     }
     if blinks == 0 {
         return 1;
     }
+
     let stone_str = stone.to_string();
-    if stone == 0 {
-        return count_stone_splits(1, blinks - 1, memo);
+    let result = if stone == 0 {
+        stone_count(1, blinks - 1, memo)
     } else if stone_str.len() % 2 == 0 {
-        let (first, last) = stone_str.split_at(stone.to_string().len() / 2);
-        let (first_int, last_int) = (first.parse().unwrap(), last.parse().unwrap());
-
-        let left = count_stone_splits(first_int, blinks - 1, memo);
-        memo.insert((first_int, blinks - 1), left);
-
-        let right = count_stone_splits(last_int, blinks - 1, memo);
-        memo.insert((last_int, blinks - 1), right);
-
-        return left + right;
+        let (left, right) = stone_str.split_at(stone.to_string().len() / 2);
+        stone_count(left.parse().unwrap(), blinks - 1, memo)
+            + stone_count(right.parse().unwrap(), blinks - 1, memo)
     } else {
-        return count_stone_splits(stone * 2024, blinks - 1, memo);
-    }
+        stone_count(stone * 2024, blinks - 1, memo)
+    };
+
+    memo.insert((stone, blinks), result);
+    result
 }
 
 pub fn parse_file(file_path: &str) -> Vec<u64> {
@@ -37,14 +34,14 @@ pub fn parse_file(file_path: &str) -> Vec<u64> {
 pub mod part1 {
     use std::collections::HashMap;
 
-    use crate::day11::{count_stone_splits, parse_file};
+    use crate::day11::{parse_file, stone_count};
 
     pub fn run(file_path: &str) -> u64 {
         let parsed = parse_file(file_path);
         let mut result = 0;
         let mut memo = HashMap::new();
-        for val in parsed {
-            result += count_stone_splits(val, 25, &mut memo);
+        for stone in parsed {
+            result += stone_count(stone, 25, &mut memo);
         }
         println!("result: {}", result);
         result
@@ -54,14 +51,14 @@ pub mod part1 {
 pub mod part2 {
     use std::collections::HashMap;
 
-    use crate::day11::{count_stone_splits, parse_file};
+    use crate::day11::{parse_file, stone_count};
 
     pub fn run(file_path: &str) -> u64 {
         let parsed = parse_file(file_path);
         let mut result = 0;
         let mut memo = HashMap::new();
-        for val in parsed {
-            result += count_stone_splits(val, 75, &mut memo);
+        for stone in parsed {
+            result += stone_count(stone, 75, &mut memo);
         }
         println!("result: {}", result);
         result
@@ -72,7 +69,7 @@ pub mod part2 {
 pub mod tests {
     use std::collections::HashMap;
 
-    use crate::day11::{count_stone_splits, part1::run};
+    use crate::day11::{part1::run, stone_count};
 
     #[test]
     pub fn test_blink() {
@@ -83,11 +80,11 @@ pub mod tests {
             (125, 4, 3),
             (125, 5, 5),
             (125, 6, 7),
-            (0, 25, 5442),
+            (0, 25, 19778),
         ];
         for (input, blinks, expected) in tests {
             let mut memo = HashMap::new();
-            let result = count_stone_splits(input, blinks, &mut memo);
+            let result = stone_count(input, blinks, &mut memo);
             println!("got result");
             assert_eq!(
                 result, expected,
