@@ -1,57 +1,95 @@
-pub mod part1 {
-    use std::fs;
+use std::{collections::HashMap, fs};
 
-    pub fn run(file_path: &str) -> usize {
-        let file = fs::read_to_string(file_path).unwrap();
-
-        let mut parsed = file
-            .trim()
-            .split(' ')
-            .map(|c| c.parse::<u64>().expect(&format!("{:?}", c)))
-            .collect();
-        for _i in 0..25 {
-            blink(&mut parsed);
-        }
-        println!("result: {}", parsed.len());
-        parsed.len()
+pub fn map_stone(stone: u64, count: u64, memo: &mut HashMap<(u64, u64), u64>) -> u64 {
+    if memo.contains_key(&(stone, count)) {
+        return *memo.get(&(stone, count)).unwrap();
     }
+    if count == 0 {
+        return 1;
+    }
+    let stone_str = stone.to_string();
+    if stone == 0 {
+        return map_stone(1, count - 1, memo);
+    } else if stone_str.len() % 2 == 0 {
+        let (first, last) = stone_str.split_at(stone.to_string().len() / 2);
+        let (first_int, last_int) = (first.parse().unwrap(), last.parse().unwrap());
+        let left = map_stone(first_int, count - 1, memo);
+        memo.insert((first_int, count - 1), left);
+        let right = map_stone(last_int, count - 1, memo);
+        memo.insert((last_int, count - 1), right);
+        return left + right;
+    } else {
+        return map_stone(stone * 2024, count - 1, memo);
+    }
+}
 
-    pub fn blink(stones: &mut Vec<u64>) {
-        let mut i = 0;
-        while i < stones.len() {
-            let stone = stones[i];
-            let stone_str = stone.to_string();
-            if stone == 0 {
-                stones[i] = 1 as u64;
-            } else if stone_str.len() % 2 == 0 {
-                let (first, last) = stone_str.split_at(stone.to_string().len() / 2);
-                let (first_int, last_int) = (first.parse().unwrap(), last.parse().unwrap());
-                // println!("str:{stone_str} first:{first}->{first_int}, last:{last}->{last_int}");
-                stones[i] = first_int;
-                stones.insert(i + 1, last_int);
-                i += 1;
-            } else {
-                // println!("times {stone}");
-                stones[i] *= 2024;
-            }
-            i += 1;
+pub fn parse_file(file_path: &str) -> Vec<u64> {
+    let file = fs::read_to_string(file_path).unwrap();
+    file.trim()
+        .split(' ')
+        .map(|c| c.parse::<u64>().expect(&format!("{:?}", c)))
+        .collect()
+}
+
+pub mod part1 {
+    use std::collections::HashMap;
+
+    use crate::day11::{map_stone, parse_file};
+
+    pub fn run(file_path: &str) -> u64 {
+        let parsed = parse_file(file_path);
+        let mut result = 0;
+        let mut memo = HashMap::new();
+        for val in parsed {
+            result += map_stone(val, 25, &mut memo);
         }
+        println!("result: {}", result);
+        result
+    }
+}
+
+pub mod part2 {
+    use std::collections::HashMap;
+
+    use crate::day11::{map_stone, parse_file};
+
+    pub fn run(file_path: &str) -> u64 {
+        let parsed = parse_file(file_path);
+        let mut result = 0;
+        let mut memo = HashMap::new();
+        for val in parsed {
+            result += map_stone(val, 75, &mut memo);
+        }
+        println!("result: {}", result);
+        result
     }
 }
 
 #[cfg(test)]
 pub mod tests {
-    use crate::day11::part1::{blink, run};
+    use std::collections::HashMap;
+
+    use crate::day11::{map_stone, part1::run};
 
     #[test]
     pub fn test_blink() {
         let tests = vec![
-            (vec![125, 17], vec![253000, 1, 7]),
-            (vec![253000, 1, 7], vec![253, 0, 2024, 14168]),
+            (125, 1, 1),
+            (125, 2, 2),
+            (125, 3, 2),
+            (125, 4, 3),
+            (125, 5, 5),
+            (125, 6, 7),
+            (0, 25, 5442),
         ];
-        for (mut input, expected) in tests {
-            blink(&mut input);
-            assert_eq!(input, expected);
+        for (input, blinks, expected) in tests {
+            let mut memo = HashMap::new();
+            let result = map_stone(input, blinks, &mut memo);
+            println!("got result");
+            assert_eq!(
+                result, expected,
+                "got {result} for {blinks} expected{expected}"
+            );
         }
     }
 
