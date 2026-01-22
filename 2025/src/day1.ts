@@ -1,12 +1,13 @@
 import fs from 'node:fs';
 import readline from 'node:readline';
 
-export const FILE_PATH = 'input/day1/example.txt';
+export const FILE_PATH = 'input/day1/input.txt';
 
 type Rotation = {
   dir: string;
   amount: number;
 };
+
 export const day1 = async (filePath = FILE_PATH) => {
   const fileStream = fs.createReadStream(filePath, {
     encoding: 'utf8',
@@ -20,8 +21,7 @@ export const day1 = async (filePath = FILE_PATH) => {
   let zeroCount = 0;
   for (const { dir, amount } of rotations) {
     cur = getNextDialPosition(cur, dir, amount);
-    console.log(`next position: ${cur} from ${dir}${amount}`);
-    if (cur === 0 || cur === 100) {
+    if (cur === 0) {
       zeroCount++;
     }
   }
@@ -32,16 +32,13 @@ export const day1 = async (filePath = FILE_PATH) => {
 export const getNextDialPosition = (currentDial: number, dir: string, amount: number): number => {
   if (dir === 'L') {
     if (currentDial - amount < 0) {
-      return 100 - (amount % currentDial);
+      const result = 100 - (Math.abs(currentDial - amount) % 100);
+      return result === 100 ? 0 : result;
     } else {
       return currentDial - amount;
     }
   } else {
-    if (currentDial + amount > 100) {
-      return (currentDial + amount) % 100;
-    } else {
-      return currentDial + amount;
-    }
+    return (currentDial + amount) % 100;
   }
 };
 
