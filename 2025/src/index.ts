@@ -1,7 +1,8 @@
 import { day1 } from './day1.js';
+import { day2 } from './day2.js';
 
 async function main() {
   console.log('aoc 2025');
-  await day1();
+  await day2();
 }
 main();
