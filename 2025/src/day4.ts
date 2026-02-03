@@ -19,15 +19,14 @@ function countMoveable2(matrix: string[][]) {
   let moved = true;
   let totalCount = 0;
   while (moved) {
-    console.log('moved');
-    const count = countMoveable(matrix);
+    const count = countMoveable(matrix, true);
     moved = count > 0;
     totalCount += count;
   }
   return totalCount;
 }
 
-function countMoveable(matrix: string[][]) {
+function countMoveable(matrix: string[][], replace = false) {
   let count = 0;
   for (let i = 0; i < matrix.length; i++) {
     for (let j = 0; j < matrix.length; j++) {
@@ -35,7 +34,7 @@ function countMoveable(matrix: string[][]) {
       const moveable = isMoveable(matrix, i, j);
       if (moveable) {
         count++;
-        matrix[i][j] = 'X';
+        if (replace) matrix[i][j] = 'X';
       }
     }
   }
